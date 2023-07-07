@@ -42,9 +42,9 @@ def Print_C_String():
 
     # Ethernet II
     # Destination:
-    profinet_data.extend(['0x00','0xa0','0x45','0xd5','0x37','0xca'])
+    profinet_data.extend(['0xa0','0x36','0x9f','0x31','0xa7','0x2e'])
     # Source:
-    profinet_data.extend(['0x0a','0x36','0x9f','0x31','0xa7','0x2e'])
+    profinet_data.extend(['0x00','0xa0','0x45','0xd5','0x37','0xca'])
     # Type
     profinet_data.extend(['0x08','0x00'])
 
@@ -57,39 +57,39 @@ def Print_C_String():
     # Total Length
     profinet_data.extend(['0x00','0xa0'])
     # Identification
-    profinet_data.extend(['0x00', '0x34'])
+    profinet_data.extend(['0x52', '0xee'])
     # Flags
-    profinet_data.append('0x00')
+    profinet_data.append('0x40')
     # Fragment Offset
     profinet_data.append('0x00')
     # Time to Live
-    profinet_data.append('0x80')
+    profinet_data.append('0x40')
     # Protocol: UDP
     profinet_data.append('0x11')
     # Header Checksum
-    profinet_data.extend(['0xb8','0x7d'])
+    profinet_data.extend(['0x00','0x00'])
     # Source Address
-    profinet_data.extend(['0xc0','0xa8','0x00','0x19'])
+    profinet_data.extend(['0xc0','0xa8','0x00','0x32'])
     # Destination Address
-    profinet_data.extend(['0xc0', '0xa8', '0x00', '0x32'])
+    profinet_data.extend(['0xc0', '0xa8', '0x00', '0x19'])
 
     # User Datagram Protocol
     # Source Port
-    profinet_data.extend(['0xc0', '0x46'])
-    # Destination Port
     profinet_data.extend(['0xe3', '0xdc'])
+    # Destination Port
+    profinet_data.extend(['0xc0', '0x46'])
     # Length
     profinet_data.extend(['0x00', '0x8c'])
     # Checksum
-    profinet_data.extend(['0x01', '0xd2'])
+    profinet_data.extend(['0x00', '0x00'])
 
     # Distributed Computing Environment / Remote Procedure Call
     # Version
     profinet_data.append('0x04')
-    # Packet Type: Request
-    profinet_data.append('0x00')
+    # Packet Type: Response
+    profinet_data.append('0x02')
     # Flags 1
-    profinet_data.append('0x28')
+    profinet_data.append('0x20')
     # Flags 2
     profinet_data.append('0x00')
     # Data Representation (Order: Big-endian, Char: ASCII, Float: IEEE)
@@ -103,7 +103,7 @@ def Print_C_String():
     # Activity: 2408f1bc-506f-4bf7-b414-be82fb0fa038
     profinet_data.extend(['0x24', '0x08', '0xf1', '0xbc', '0x50', '0x6f', '0x4b', '0xf7', '0xb4', '0x14', '0xbe', '0x82', '0xfb', '0x0f', '0xa0', '0x38'])
     # Server Boot time
-    profinet_data.extend(['0x00','0x00','0x00','0x00'])
+    profinet_data.extend(['0x5d','0x61','0x73','0x2d'])
     # Interface Ver: 1
     profinet_data.extend(['0x00', '0x00', '0x00', '0x01'])
     # Sequence Number: 43
@@ -124,8 +124,8 @@ def Print_C_String():
     profinet_data.append('0x00')
 
     # Profinet IO (Device), Control
-    # ArgsMaximum: 66412
-    profinet_data.extend(['0x00', '0x01','0x03','0x6c'])
+    # Status: OK
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
     # ArgsLength: 32 (0x00000020)
     profinet_data.extend(['0x00', '0x00', '0x00', '0x20'])
     # Array: Max: 66412, Offset: 0, Size: 32
@@ -138,8 +138,8 @@ def Print_C_String():
 
     # IODControlReq Prm End.req: Session:10, Command: ParameterEnd, Properties:0x0
     # BlockHeader: Type=IODControlReq Prm End.req, Length=28(+4), Version=1.0
-    # BlockType: IODControlReq Prm End.req (0x0110)
-    profinet_data.extend(['0x01', '0x10'])
+    # BlockType: IODControlRes Prm End.res (0x8110)
+    profinet_data.extend(['0x81', '0x10'])
     # BlockLength: 28 (0x001c)
     profinet_data.extend(['0x00', '0x1c'])
     # BlockVersionHigh: 1
@@ -154,10 +154,72 @@ def Print_C_String():
     profinet_data.extend(['0x00', '0x0a'])
     # Reserved: 0x0000
     profinet_data.extend(['0x00', '0x00'])
-    # ControlCommand: 0x0001, ParameterEnd
-    profinet_data.extend(['0x00', '0x01'])
+    # ControlCommand: 0x0008, Done
+    profinet_data.extend(['0x00', '0x08'])
     # ControlBlockProperties: Reserved (0x0000)
     profinet_data.extend(['0x00', '0x00'])
+
+    # Questions: Should both BlockVersionHigh and BlockVersionLow should be added to
+    #     the block header? Moreover, What version should they have?
+
+    # RealIdentificationData with BlockVersionLow
+    # BlockHeader, NumberOfAPIs, (API, NumberOfSlots, (SlotNumber, ModuleIdentNumber,
+    # NumberOfSubslots, (SubslotNumber, SubmoduleIdentNumber)*)*)*
+
+    # BlockHeader
+    # BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
+    # BlockType:0x0013
+    # profinet_data.append('0x0013')
+    profinet_data.extend(['0x00', '0x13'])
+    # BlockLength-> based on the following, it's fixed at 22 bytes or 0x0016
+    # profinet_data.append('0x0016')
+    profinet_data.extend(['0x00', '0x16'])
+    # BlockVersionHigh
+    # Version 1
+    profinet_data.append('0x01')
+    # BlockVersionLow
+    # Version 1
+    profinet_data.append('0x01')
+
+    # NumberOfAPIs
+    # Coded as data type Unsigned16.
+    # profinet_data.append('0x0001')
+    profinet_data.extend(['0x00', '0x01'])
+    # API
+    # Coded as data type Unsigned32
+    # profinet_data.append('0x0000FFFF')
+    profinet_data.extend(['0x00', '0x00', '0xFF', '0xFF'])
+    # NumberOfSlots
+    # Coded as data type Unsigned16.
+    # profinet_data.append('0x0001')
+    profinet_data.extend(['0x00', '0x01'])
+    # SlotNumber
+    # Coded as data type Unsigned16
+    # profinet_data.append('0x0000')
+    profinet_data.extend(['0x00', '0x00'])
+
+    # ModuleIdentNumber
+    # Coded as data type Unsigned32
+    # profinet_data.append('0x00000001')
+    profinet_data.extend(['0x00', '0x00','0x00','0x01'])
+
+    # NumberOfSubslots
+    # Coded as data type Unsigned16.
+    # profinet_data.append('0x0001')
+    profinet_data.extend(['0x00', '0x01'])
+
+    # SubSlotNumber
+    # Coded as data type Unsigned16.
+    # profinet_data.append('0x0001')
+    profinet_data.extend(['0x00', '0x01'])
+
+    # SubmoduleIdentNumber
+    # Coded as data type Unsigned32.
+    # profinet_data.append('0x00000001')
+    profinet_data.extend(['0x00', '0x00','0x00', '0x01'])
+
+
+
 
     # The length field in the IP layer needs to be set.
     # Assuming the number of Octets in the Ethernet layer remain the same for each packet,
@@ -229,9 +291,16 @@ def Print_C_String():
 
     print(f"{calculated_checksum:04x}")
 
-    with open('alarm_1324.txt', 'w') as f:
+    with open('RealidentificationDataLow_alarm_1325.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + '\n')
+
+
+
+
+
+
+
 
 # Parse the pcap file and get the dataframes
 Print_C_String()

@@ -19,3 +19,5 @@ This Python script generates a raw Ethernet II frame for a ProfiNet protocol ove
    - It then calculates the length of DCE/RPC data and adjusts the DCE/RPC length field in the header.
 
    - Finally, it writes the entire constructed packet (with all headers and data) into a text file named `ms.txt`.
+
+Filter: (ip.dst && dcerpc.ver)
