@@ -1,0 +1,7 @@
+    # SRLData
+    # BlockHeader, RedundancyInfo, [Padding*] ^a
+    # a -> The number of padding octets shall be adapted to make the block Unsigned32 aligned.
+
+
+    # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
+    # BlockType: 0x0019
