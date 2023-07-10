@@ -123,100 +123,126 @@ def Print_C_String():
     # Serial Low: 0x00
     profinet_data.append('0x00')
 
-    # Profinet IO (Device), Control
-    # Status: OK
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
-    # ArgsLength: 32 (0x00000020)
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x20'])
-    # Array: Max: 66412, Offset: 0, Size: 32
-    # MaximumCount: 66412
-    profinet_data.extend(['0x00', '0x01', '0x03', '0x6c'])
-    # Offset: 0 (0x00000000)
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
-    # ActualCount: 32
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x20'])
+    # LogBookData with
+    # BlockVersionLow = 0
+    # BlockHeader, ActualLocalTimeStamp, NumberOfLogEntries, (LocalTimeStamp, ARUUID,
+    # PNIOStatus, EntryDetail)*
 
-    # IODControlReq Prm End.req: Session:10, Command: ParameterEnd, Properties:0x0
-    # BlockHeader: Type=IODControlReq Prm End.req, Length=28(+4), Version=1.0
-    # BlockType: IODControlRes Prm End.res (0x8110)
-    profinet_data.extend(['0x81', '0x10'])
-    # BlockLength: 28 (0x001c)
-    profinet_data.extend(['0x00', '0x1c'])
-    # BlockVersionHigh: 1
+    # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
+    # BlockType: 0x0019
+    profinet_data.extend(['0x00', '0x19'])
+    # BlockLength
+    # 5.2.1.2 Coding of the field BlockLength
+    # This field shall be coded as data type Unsigned16 with the values according to Table 557.
+    # Table 557 – BlockLength
+    # Value
+    # (hexadecimal) Meaning
+    # 0x0000 – 0x0002 Reserved
+    # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
+    # ???
+
+    # 5.2.1.3 Coding of the field BlockVersionHigh
+    # 8796 This field shall be coded as data type Unsigned8 with the values according to Table 558.
+    # 8797 Table 558 – BlockVersionHigh
+    # Value
+    # (hexadecimal) Meaning Use
+    # 0x00 Reserved —
+    # 0x01 Version 1 Indicates version 1
+    # 0x02 – 0xFF Reserved —
     profinet_data.append('0x01')
-    # BlockVersionLow: 0
+
+    # 5.2.1.4 Coding of the field BlockVersionLow
+    # 8800 This field shall be coded as data type Unsigned8 with the values according to Table 559.
+    # 8801 Table 559 – BlockVersionLow
+    # Value
+    # (hexadecimal) Meaning Use
+    # 0x00 Version 0 Indicates version 0
+    # 0x01 Version 1 Indicates version 1
+    # 0x02 – 0xFF Version 2 to version 255 Indicates version 2 to 255
     profinet_data.append('0x00')
-    # Reserved: 0x0000
-    profinet_data.extend(['0x00', '0x00'])
-    # ARUUID: daef5a22-0fce-4145-bd75-998938d106c1
-    profinet_data.extend(['0xda', '0xef', '0x5a', '0x22', '0x0f', '0xce', '0x41', '0x45', '0xbd', '0x75', '0x99', '0x89', '0x38', '0xd1', '0x06', '0xc1'])
-    # SessionKey: 10
-    profinet_data.extend(['0x00', '0x0a'])
-    # Reserved: 0x0000
-    profinet_data.extend(['0x00', '0x00'])
-    # ControlCommand: 0x0008, Done
-    profinet_data.extend(['0x00', '0x08'])
-    # ControlBlockProperties: Reserved (0x0000)
-    profinet_data.extend(['0x00', '0x00'])
 
-    # Questions: Should both BlockVersionHigh and BlockVersionLow should be added to
-    #     the block header? Moreover, What version should they have?
+    # 5.2.24.1 Coding of the field ActualLocalTimeStamp
+    # 11937 This field shall be coded as data type Unsigned64 according to Table 1047.
+    # 11938 Table 1047 – ActualLocalTimeStamp
+    # Value
+    # (hexadecimal)
+    # Meaning Use
+    # 0x0000000000000000 – 0xFFFFFFFFFFFFFFFF Contains the current cycle count
+    # value when reading the logbook. —
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00'])
 
-    # RealIdentificationData with BlockVersionLow =1
-    # BlockHeader, NumberOfAPIs, (API, NumberOfSlots, (SlotNumber, ModuleIdentNumber,
-    # NumberOfSubslots, (SubslotNumber, SubmoduleIdentNumber)*)*)*
-
-    # BlockHeader
-    # BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType:0x0013
-    # profinet_data.append('0x0013')
-    profinet_data.extend(['0x00', '0x13'])
-    # BlockLength-> based on the following, it's fixed at 22 bytes or 0x0016
-    # profinet_data.append('0x0016')
-    profinet_data.extend(['0x00', '0x16'])
-    # BlockVersionHigh
-    # Version 1
-    profinet_data.append('0x01')
-    # BlockVersionLow
-    # Version 1
-    profinet_data.append('0x01')
-
-    # NumberOfAPIs
-    # Coded as data type Unsigned16.
-    # profinet_data.append('0x0001')
-    profinet_data.extend(['0x00', '0x01'])
-    # API
-    # Coded as data type Unsigned32
-    # profinet_data.append('0x0000FFFF')
-    profinet_data.extend(['0x00', '0x00', '0xFF', '0xFF'])
-    # NumberOfSlots
-    # Coded as data type Unsigned16.
-    # profinet_data.append('0x0001')
-    profinet_data.extend(['0x00', '0x01'])
-    # SlotNumber
-    # Coded as data type Unsigned16
-    # profinet_data.append('0x0000')
-    profinet_data.extend(['0x00', '0x00'])
-
-    # ModuleIdentNumber
-    # Coded as data type Unsigned32
-    # profinet_data.append('0x00000001')
-    profinet_data.extend(['0x00', '0x00','0x00','0x01'])
-
-    # NumberOfSubslots
-    # Coded as data type Unsigned16.
-    # profinet_data.append('0x0001')
+    # 5.2.24.3 Coding of the field NumberOfLogEntries
+    # 11945 This field shall be coded as data type Unsigned16 according to Table 1049.
+    # 11946 Table 1049 – NumberOfLogEntries
+    # Value Meaning Use
+    # 0 Reserved —
+    # Other Number of log entries —
     profinet_data.extend(['0x00', '0x01'])
 
-    # SubSlotNumber
-    # Coded as data type Unsigned16.
-    # profinet_data.append('0x0001')
-    profinet_data.extend(['0x00', '0x01'])
+    # 5.2.24.2 Coding of the field LocalTimeStamp
+    # 11941 This field shall be coded as data type Unsigned64 according to Table 1048.
+    # 11942 Table 1048 – LocalTimeStamp
+    # Value
+    # (hexadecimal)
+    # Meaning Use
+    # 0x0000000000000000 – 0xFFFFFFFFFFFFFFFF
+    # Contains the current cycle count
+    # when storing the entry to the
+    # logbook.
+    # —
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x01'])
 
-    # SubmoduleIdentNumber
-    # Coded as data type Unsigned32.
-    # profinet_data.append('0x00000001')
-    profinet_data.extend(['0x00', '0x00','0x00', '0x01'])
+    # 0000000000000000000000000000000000000000000000000000000000000000
+    # 5.2.4.47 Coding of the field ARUUID
+    # 9306 This field shall be coded as data type UUID according to Table 635, Table 636, Table 637, and
+    # 9307 Table 638.
+    # 9308 Table 635 – ARUUID
+    # Value
+    # (UUID)
+    # Meaning Use
+    # 00000000-0000-0000-0000-000000000000 Reserved The value NIL indicates the usage of the
+    # implicit AR.
+    # 6+8+2 Octets
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00','0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x01'])
+
+    # 5.2.6 Coding section related to PNIOStatus
+    # 9617 5.2.6.1 General
+    # 9618 In general, the values ErrorCode=0, ErrorDecode=0, ErrorCode1=0 and ErrorCode2=0 shall be
+    # 9619 used to indicate “okay”.
+    # 9620 Furthermore, in case of an illegal combination of address parameters within an IODReadReq
+    # 9621 the values ErrorCode=“IODReadRes”, ErrorDecode=“PNIORW”, ErrorCode1=“access-invalid
+    # 9622 area” and ErrorCode2 may be used to indicate the faulty parameter.
+    # 9623 NOTE An illegal address combination is for example TargetARUUID == NIL and ARUUID == NIL in
+    # 9624 ReadExpectedIdentification service.
+    # Table 691 – Values of ErrorCode for negative responses
+    # Value
+    # (hexadecimal)
+    # Meaning Use
+    # 0x00 Reserved
+    # Special case “No Error”:
+    # ErrorCode = 0,
+    # ErrorDecode = 0,
+    # ErrorCode1 = 0,
+    # ErrorCode2 = 0
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+
+    # 5.2.24.4 Coding of the 11948 field EntryDetail
+    # 11949 This field shall be coded as data type Unsigned32 according to protocol machine behavior and
+    # 11950 Table 1050.
+    # 11951 Table 1050 – EntryDetail
+    # Value
+    # (hexadecimal)
+    # Meaning Use
+    # 0x00000000 No detail —
+    # Other Value derived from the signaling protocol
+    # machine —
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+
+
+
+
+
+
 
 
 
@@ -291,12 +317,62 @@ def Print_C_String():
 
     print(f"{calculated_checksum:04x}")
 
-    with open('RealidentificationDataLow_alarm_1325.txt', 'w') as f:
+    with open('alarm_1325.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + '\n')
 
 
+# Questions: Should both BlockVersionHigh and BlockVersionLow should be added to
+#     the block header? Moreover, What version should they have?
 
+    # RealIdentificationData with BlockVersionLow
+    # BlockHeader, NumberOfAPIs, (API, NumberOfSlots, (SlotNumber, ModuleIdentNumber,
+    # NumberOfSubslots, (SubslotNumber, SubmoduleIdentNumber)*)*)*
+
+    # BlockHeader
+    # BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
+    # BlockType:0x0013
+    profinet_data.append('0x0013')
+    # BlockLength-> based on the following, it's fixed at 22 bytes or 0x0016
+    profinet_data.append('0x0016')
+    # BlockVersionHigh
+    # Version 1
+    profinet_data.append('0x01')
+    # BlockVersionLow
+    # Version 1
+    profinet_data.append('0x01')
+
+    # NumberOfAPIs
+    # Coded as data type Unsigned16.
+    profinet_data.append('0x0001')
+
+    # API
+    # Coded as data type Unsigned32
+    profinet_data.append('0x0000FFFF')
+
+    # NumberOfSlots
+    # Coded as data type Unsigned16.
+    profinet_data.append('0x0001')
+
+    # SlotNumber
+    # Coded as data type Unsigned16
+    profinet_data.append('0x0000')
+
+    # ModuleIdentNumber
+    # Coded as data type Unsigned32
+    profinet_data.append('0x00000001')
+
+    # NumberOfSubslots
+    # Coded as data type Unsigned16.
+    profinet_data.append('0x0001')
+
+    # SubSlotNumber
+    # Coded as data type Unsigned16.
+    profinet_data.append('0x0001')
+
+    # SubmoduleIdentNumber
+    # Coded as data type Unsigned32.
+    profinet_data.append('0x00000001')
 
 
 
