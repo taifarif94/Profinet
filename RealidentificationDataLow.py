@@ -123,6 +123,11 @@ def Print_C_String():
     # Serial Low: 0x00
     profinet_data.append('0x00')
 
+    # Stub data/ Fragment length marker.
+    # In order to calculate the correct fragment length, a marker is being placed here. This means it will be deducted from the total profinet data to calculate the length.
+    fragment_length_start_marker = len(profinet_data.copy())
+
+
     # Profinet IO (Device), Control
     # Status: OK
     profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
@@ -158,7 +163,11 @@ def Print_C_String():
     profinet_data.extend(['0x00', '0x08'])
     # ControlBlockProperties: Reserved (0x0000)
     profinet_data.extend(['0x00', '0x00'])
+    fragment_length_end_marker = len(profinet_data.copy())
 
+
+    # We assume for the time being that this block is NOT included in the stub data. This is being treated as a seperate layer.
+    # Later this assumption will be managed if required.
     # Questions: Should both BlockVersionHigh and BlockVersionLow should be added to
     #     the block header? Moreover, What version should they have?
 
@@ -284,8 +293,8 @@ def Print_C_String():
     profinet_data[40] = '0x' + format(calculated_checksum, '04x')[0:2]
     profinet_data[41] = '0x' + format(calculated_checksum, '04x')[2:]
 
-    dce_fragment_length = (len(profinet_data)-(14+20+8+80))
-
+    # dce_fragment_length = (len(profinet_data)-(14+20+8+80))
+    dce_fragment_length = fragment_length_end_marker - fragment_length_start_marker
     profinet_data[116] = '0x' + format(dce_fragment_length, '04x')[0:2]
     profinet_data[117] = '0x' + format(dce_fragment_length, '04x')[2:]
 
