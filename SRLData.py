@@ -168,64 +168,47 @@ def Print_C_String():
 
     # We assume for the time being that this block is NOT included in the stub data. This is being treated as a seperate layer.
     # Later this assumption will be managed if required.
-    # Questions: Should both BlockVersionHigh and BlockVersionLow should be added to
-    #     the block header? Moreover, What version should they have?
 
-    # RealIdentificationData with BlockVersionLow =1
-    # BlockHeader, NumberOfAPIs, (API, NumberOfSlots, (SlotNumber, ModuleIdentNumber,
-    # NumberOfSubslots, (SubslotNumber, SubmoduleIdentNumber)*)*)*
-
-    # BlockHeader
+    # SRLData
+    # Whole block should be unsigned32 aligned with Padding
+    # BlockHeader, RedundancyInfo, [Padding^*]
     # BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType:0x0013
-    # profinet_data.append('0x0013')
-    profinet_data.extend(['0x00', '0x13'])
-    # BlockLength-> based on the following, it's fixed at 22 bytes or 0x0016
-    # profinet_data.append('0x0016')
-    profinet_data.extend(['0x00', '0x16'])
+    # BlockType: 0x001B
+    # Begin counting the whole block length to determine padding length.
+    startLenPadding = len(profinet_data.copy())-1
+    profinet_data.extend(['0x00', '0x1B'])
+    # BlockLength
+    # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
+    profinet_data.extend(['0x00','0x00'])
+    # Begin counting block length
+    startLenLogBookData=len(profinet_data.copy())-1
+
     # BlockVersionHigh
-    # Version 1
     profinet_data.append('0x01')
+
     # BlockVersionLow
-    # Version 1
-    profinet_data.append('0x01')
+    profinet_data.append('0x00')
 
-    # NumberOfAPIs
-    # Coded as data type Unsigned16.
-    # profinet_data.append('0x0001')
-    profinet_data.extend(['0x00', '0x01'])
-    # API
-    # Coded as data type Unsigned32
-    # profinet_data.append('0x0000FFFF')
-    profinet_data.extend(['0x00', '0x00', '0xFF', '0xFF'])
-    # NumberOfSlots
-    # Coded as data type Unsigned16.
-    # profinet_data.append('0x0001')
-    profinet_data.extend(['0x00', '0x01'])
-    # SlotNumber
-    # Coded as data type Unsigned16
-    # profinet_data.append('0x0000')
-    profinet_data.extend(['0x00', '0x00'])
+    # RedundancyInfo
+    profinet_data.extend(['0x00','0x01'])
+    endLenLogBookData = len(profinet_data.copy()) - 1
 
-    # ModuleIdentNumber
-    # Coded as data type Unsigned32
-    # profinet_data.append('0x00000001')
-    profinet_data.extend(['0x00', '0x00','0x00','0x01'])
+    print("The length is: ")
+    print(endLenLogBookData-startLenLogBookData)
 
-    # NumberOfSubslots
-    # Coded as data type Unsigned16.
-    # profinet_data.append('0x0001')
-    profinet_data.extend(['0x00', '0x01'])
+    # Assigning Length
+    print('0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:])
+    profinet_data[startLenLogBookData-1] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[:2]
+    profinet_data[startLenLogBookData] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:]
 
-    # SubSlotNumber
-    # Coded as data type Unsigned16.
-    # profinet_data.append('0x0001')
-    profinet_data.extend(['0x00', '0x01'])
+    remainder = (endLenLogBookData-startLenLogBookData) % 4
+    if remainder !=0:
+        padding = 4-remainder
+        for i in range(0,padding):
+            profinet_data.append('0x00')
+            print("Padding Added")
 
-    # SubmoduleIdentNumber
-    # Coded as data type Unsigned32.
-    # profinet_data.append('0x00000001')
-    profinet_data.extend(['0x00', '0x00','0x00', '0x01'])
+
 
 
 
@@ -279,7 +262,7 @@ def Print_C_String():
 
     DCE_RPC_hex = "".join(x[2:] for x in DCE_RPC)
     DCE_RPC_hex = bytes.fromhex(DCE_RPC_hex)
-    print(DCE_RPC_hex)
+    # print(DCE_RPC_hex)
 
     # pad the data if necessary
     if len(DCE_RPC_hex) % 2 != 0:
@@ -298,9 +281,9 @@ def Print_C_String():
     profinet_data[116] = '0x' + format(dce_fragment_length, '04x')[0:2]
     profinet_data[117] = '0x' + format(dce_fragment_length, '04x')[2:]
 
-    print(f"{calculated_checksum:04x}")
+    # print(f"{calculated_checksum:04x}")
 
-    with open('SRLData_alarm_1325.txt', 'w') as f:
+    with open('LogBookData_alarm_1325_1.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + '\n')
 
