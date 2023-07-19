@@ -1,9 +1,4 @@
 .idea/
-/Documentation.txt
-/comparision_1325_realidentificationlow.txt
-/Documentation_SRLData.txt
-/Documentation_LogBookData.txt
-/meds.txt
-/LogBookData_alarm_1325.txt
-/LogBookData_alarm_1325_1.txt
-/SRLData_alarm_1325.txt
+Documentation/
+Data/
+
