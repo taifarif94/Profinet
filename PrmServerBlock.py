@@ -168,16 +168,18 @@ def Print_C_String():
 
     # We assume for the time being that this block is NOT included in the stub data. This is being treated as a seperate layer.
     # Later this assumption will be managed if required.
-    # LogBookData with
-    # BlockVersionLow = 0
-    # BlockHeader, ActualLocalTimeStamp, NumberOfLogEntries, (LocalTimeStamp, ARUUID,
-    # PNIOStatus, EntryDetail)*
+    # BlockHeader, ParameterServerObjectUUID, ParameterServerProperties,
+    # CMInitiatorActivityTimeoutFactor, StationNameLength, ParameterServerStationName
 
-    # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType: 0x0019
-    profinet_data.extend(['0x00', '0x19'])
+    # BlockHeader
+    # BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
+    # BlockType: 0x0105
+    # Begin counting the whole block length to determine padding length.
+    startLenPadding = len(profinet_data.copy())
+    profinet_data.extend(['0x01', '0x05'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
+    # Filled in dummy length, determined at runtime.
     profinet_data.extend(['0x00','0x00'])
     # Begin counting block length
     startLenLogBookData=len(profinet_data.copy())
@@ -188,33 +190,9 @@ def Print_C_String():
     # BlockVersionLow
     profinet_data.append('0x00')
 
-    # ActualLocalTimeStamp
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00'])
-
-    # NumberOfLogEntries
-    profinet_data.extend(['0x00', '0x01'])
-
-    # LocalTimeStamp
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x01'])
-
-    # ARUUID
-    # 6+8+2 Octets
-    profinet_data.extend(
-        ['0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00',
-         '0x00', '0x01'])
-
-    # PNIOStatus
-    # ErrorCode = 0,
-    # ErrorDecode = 0,
-    # ErrorCode1 = 0,
-    # ErrorCode2 = 0
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
-
-    # EntryDetail
-    # This field shall be coded as data type Unsigned32
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
-
+    #
     endLenLogBookData = len(profinet_data.copy())
+
     print("The length is: ")
     print(endLenLogBookData-startLenLogBookData)
 
@@ -222,6 +200,16 @@ def Print_C_String():
     print('0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:])
     profinet_data[startLenLogBookData-1] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[:2]
     profinet_data[startLenLogBookData] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:]
+
+    remainder = (endLenLogBookData-startLenLogBookData) % 4
+    if remainder !=0:
+        padding = 4-remainder
+        for i in range(0,padding):
+            profinet_data.append('0x00')
+            print("Padding Added")
+
+
+
 
 
 
@@ -295,7 +283,7 @@ def Print_C_String():
 
     # print(f"{calculated_checksum:04x}")
 
-    with open('Data/LogBookData_alarm_1325_1.txt', 'w') as f:
+    with open('Data/PrmServerBlock_alarm_1325_1.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + '\n')
 

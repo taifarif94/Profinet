@@ -175,13 +175,13 @@ def Print_C_String():
     # BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
     # BlockType: 0x001B
     # Begin counting the whole block length to determine padding length.
-    startLenPadding = len(profinet_data.copy())-1
+    startLenPadding = len(profinet_data.copy())
     profinet_data.extend(['0x00', '0x1B'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
     profinet_data.extend(['0x00','0x00'])
     # Begin counting block length
-    startLenLogBookData=len(profinet_data.copy())-1
+    startLenLogBookData=len(profinet_data.copy())
 
     # BlockVersionHigh
     profinet_data.append('0x01')
@@ -191,7 +191,7 @@ def Print_C_String():
 
     # RedundancyInfo
     profinet_data.extend(['0x00','0x01'])
-    endLenLogBookData = len(profinet_data.copy()) - 1
+    endLenLogBookData = len(profinet_data.copy())
 
     print("The length is: ")
     print(endLenLogBookData-startLenLogBookData)
@@ -201,7 +201,8 @@ def Print_C_String():
     profinet_data[startLenLogBookData-1] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[:2]
     profinet_data[startLenLogBookData] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:]
 
-    remainder = (endLenLogBookData-startLenLogBookData) % 4
+    print(f"The Length of the whole block is: {endLenLogBookData-startLenPadding}")
+    remainder = (endLenLogBookData-startLenPadding) % 4
     if remainder !=0:
         padding = 4-remainder
         for i in range(0,padding):
