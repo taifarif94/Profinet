@@ -295,7 +295,7 @@ def Print_C_String():
 
     # print(f"{calculated_checksum:04x}")
 
-    with open('LogBookData_alarm_1325_1.txt', 'w') as f:
+    with open('Data/LogBookData_alarm_1325_1.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + '\n')
 
