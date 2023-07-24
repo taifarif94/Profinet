@@ -220,8 +220,8 @@ def Print_C_String():
 
     # Assigning Length
     print('0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:])
-    profinet_data[startLenLogBookData-1] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[:2]
-    profinet_data[startLenLogBookData] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:]
+    profinet_data[startLenLogBookData-2] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[:2]
+    profinet_data[startLenLogBookData-1] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:]
 
 
 

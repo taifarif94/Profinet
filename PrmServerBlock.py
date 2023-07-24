@@ -182,9 +182,13 @@ def Print_C_String():
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
     # Filled in dummy length, determined at runtime.
-    profinet_data.extend(['0x00','0x00'])
+    profinet_data.extend(['0x05','0x00'])
+    print(len(profinet_data))
+    print(profinet_data[len(profinet_data)-2])
     # Begin counting block length
     startPrmServerBlock=len(profinet_data.copy())
+    print((startPrmServerBlock))
+    print(profinet_data[startPrmServerBlock-2])
 
     # BlockVersionHigh
     profinet_data.append('0x01')
@@ -224,13 +228,13 @@ def Print_C_String():
     # End of block
     endPrmServerBlock = len(profinet_data.copy())
 
-    print("The length is: ")
-    print(endPrmServerBlock - startPrmServerBlock)
+    # print("The length is: ")
+    # print(endPrmServerBlock - startPrmServerBlock)
 
     # Assigning Length
-    print('0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[2:])
-    profinet_data[startPrmServerBlock - 1] = '0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[:2]
-    profinet_data[startPrmServerBlock] = '0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[2:]
+    # print('0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[2:])
+    profinet_data[startPrmServerBlock - 2] = '0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[:2]
+    profinet_data[startPrmServerBlock-1] = '0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[2:]
 
     # remainder = (endPrmServerBlock - startPrmServerBlock) % 4
     # if remainder !=0:
