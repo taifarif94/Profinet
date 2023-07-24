@@ -168,21 +168,23 @@ def Print_C_String():
 
     # We assume for the time being that this block is NOT included in the stub data. This is being treated as a seperate layer.
     # Later this assumption will be managed if required.
+    # PrmServerBlock
     # BlockHeader, ParameterServerObjectUUID, ParameterServerProperties,
     # CMInitiatorActivityTimeoutFactor, StationNameLength, ParameterServerStationName
 
     # BlockHeader
     # BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType: 0x0105
+
     # Begin counting the whole block length to determine padding length.
-    startLenPadding = len(profinet_data.copy())
+    # startLenPadding = len(profinet_data.copy())
+    # BlockType: 0x0105
     profinet_data.extend(['0x01', '0x05'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
     # Filled in dummy length, determined at runtime.
     profinet_data.extend(['0x00','0x00'])
     # Begin counting block length
-    startLenLogBookData=len(profinet_data.copy())
+    startPrmServerBlock=len(profinet_data.copy())
 
     # BlockVersionHigh
     profinet_data.append('0x01')
@@ -190,23 +192,52 @@ def Print_C_String():
     # BlockVersionLow
     profinet_data.append('0x00')
 
-    #
-    endLenLogBookData = len(profinet_data.copy())
+    # ParameterServerObjectUUID
+    # Since no specific definition for this could be found, a generic UUID from above is being used
+    # Interface: PNIO(Device Interface) UUID: dea00001 -6c97-11d1 - 8271 - 00a02442df7d
+    profinet_data.extend(['0xde', '0xa0', '0x00', '0x01', '0x6c', '0x97', '0x11', '0xd1', '0x82', '0x71', '0x00', '0xa0', '0x24', '0x42', '0xdf', '0x7d'])
+
+    # ParameterServerProperties
+    # As per the definition, this should be coded as Unsigned32 BUT it is reserved for future use.
+    # Therefore, a random Unsigned32 bit value is being assigned.
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+
+    # CMInitiatorActivityTimeoutFactor
+    # As per the documentation, this is to be assigned a value of Unsigned16
+    # If Device access is 0, the allowed values are 1-1000 (Decimal), of Device access is 1 or Startup mode is advanced,
+    # allowed values are 100-1000.
+    # Since it is not currently known which condition will be used, a value which is acceptable to both conditions (200 which
+    # is also the default value for the second condition) is being assigned.
+    profinet_data.extend(['0x00', '0xc8'])
+
+    # StationNameLength
+    # The Documentation states that this value should be coded as an Unsigned16.
+    # Since no specifics are known, A random length is being assigned.
+    profinet_data.extend(['0x00', '0x01'])
+
+    # ParameterServerStationName
+    # This should be of data type OctetString with 1 to 240 octets according to 4.3.1.4.16.
+    # Since we don't have access to the table 4.3.1.4.16, We make a random length of 2 octets.
+    # And we also assume the data values to be in hexadecimal
+    profinet_data.extend(['0xab', '0xcd'])
+
+    # End of block
+    endPrmServerBlock = len(profinet_data.copy())
 
     print("The length is: ")
-    print(endLenLogBookData-startLenLogBookData)
+    print(endPrmServerBlock - startPrmServerBlock)
 
     # Assigning Length
-    print('0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:])
-    profinet_data[startLenLogBookData-1] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[:2]
-    profinet_data[startLenLogBookData] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:]
+    print('0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[2:])
+    profinet_data[startPrmServerBlock - 1] = '0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[:2]
+    profinet_data[startPrmServerBlock] = '0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[2:]
 
-    remainder = (endLenLogBookData-startLenLogBookData) % 4
-    if remainder !=0:
-        padding = 4-remainder
-        for i in range(0,padding):
-            profinet_data.append('0x00')
-            print("Padding Added")
+    # remainder = (endPrmServerBlock - startPrmServerBlock) % 4
+    # if remainder !=0:
+    #     padding = 4-remainder
+    #     for i in range(0,padding):
+    #         profinet_data.append('0x00')
+    #         print("Padding Added")
 
 
 
