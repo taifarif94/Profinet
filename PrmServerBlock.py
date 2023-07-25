@@ -216,8 +216,9 @@ def Print_C_String():
 
     # StationNameLength
     # The Documentation states that this value should be coded as an Unsigned16.
-    # Since no specifics are known, A random length is being assigned.
-    profinet_data.extend(['0x00', '0x01'])
+    # Since no specifics are known, an assumption is made that this length refers to the Length of ParameterServerStationName
+    # Since that is 2 octets long, 0x10 is being assigned, referring the number of bits which is 16.
+    profinet_data.extend(['0x00', '0x10'])
 
     # ParameterServerStationName
     # This should be of data type OctetString with 1 to 240 octets according to 4.3.1.4.16.
