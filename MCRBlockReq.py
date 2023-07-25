@@ -185,7 +185,7 @@ def Print_C_String():
     # Filled in dummy length, determined at runtime.
     profinet_data.extend(['0x00','0x00'])
     # Begin counting block length
-    startPrmServerBlock=len(profinet_data.copy())
+    startBlock=len(profinet_data.copy())
 
     # BlockVersionHigh
     profinet_data.append('0x01')
@@ -208,53 +208,42 @@ def Print_C_String():
 
     profinet_data.extend(['0x00', '0x01', '0x00', '0x02'])
 
-
-
-
-
-
-
-
-    # As per the definition, this should be coded as Unsigned32 BUT it is reserved for future use.
-    # Therefore, a random Unsigned32 bit value is being assigned.
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
-
-    # CMInitiatorActivityTimeoutFactor
-    # As per the documentation, this is to be assigned a value of Unsigned16
-    # If Device access is 0, the allowed values are 1-1000 (Decimal), of Device access is 1 or Startup mode is advanced,
-    # allowed values are 100-1000.
-    # Since it is not currently known which condition will be used, a value which is acceptable to both conditions (200 which
-    # is also the default value for the second condition) is being assigned.
-    profinet_data.extend(['0x00', '0xc8'])
+    # MCITimeoutFactor
+    # Coded as datatype Unsigned16
+    # Acceptable values within the range 0x0000 – 0x0064 so 0x0000 choosed at random
+    profinet_data.extend(['0x00', '0x00'])
 
     # StationNameLength
-    # The Documentation states that this value should be coded as an Unsigned16.
-    # Since no specifics are known, A random length is being assigned.
-    profinet_data.extend(['0x00', '0x01'])
+    # Coded as datatype Unsigned16
+    # Since no specifics are known, an assumption is made that this length refers to the Length of ProviderStationName
+    # Since that is 2 octets long, 0x10 is being assigned, referring the number of bits which is 16.
+    profinet_data.extend(['0x00', '0x10'])
 
-    # ParameterServerStationName
+    # ProviderStationName
     # This should be of data type OctetString with 1 to 240 octets according to 4.3.1.4.16.
     # Since we don't have access to the table 4.3.1.4.16, We make a random length of 2 octets.
     # And we also assume the data values to be in hexadecimal
     profinet_data.extend(['0xab', '0xcd'])
 
+
     # End of block
-    endPrmServerBlock = len(profinet_data.copy())
+    endBlock = len(profinet_data.copy())
 
     print("The length is: ")
-    print(endPrmServerBlock - startPrmServerBlock)
+    print(endBlock - startBlock)
 
     # Assigning Length
-    print('0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[2:])
-    profinet_data[startPrmServerBlock - 2] = '0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[:2]
-    profinet_data[startPrmServerBlock-1] = '0x' + (hex(endPrmServerBlock - startPrmServerBlock)[2:].zfill(4))[2:]
+    print('0x' + (hex(endBlock - startBlock)[2:].zfill(4))[2:])
+    profinet_data[startBlock - 2] = '0x' + (hex(endBlock - startBlock)[2:].zfill(4))[:2]
+    profinet_data[startBlock - 1] = '0x' + (hex(endBlock - startBlock)[2:].zfill(4))[2:]
 
-    # remainder = (endPrmServerBlock - startPrmServerBlock) % 4
-    # if remainder !=0:
-    #     padding = 4-remainder
-    #     for i in range(0,padding):
-    #         profinet_data.append('0x00')
-    #         print("Padding Added")
+    remainder = (endBlock - startBlock) % 4
+    print(endBlock - startLenPadding)
+    if remainder !=0:
+        padding = 4-remainder
+        for i in range(0,padding):
+            profinet_data.append('0x00')
+            print("Padding Added")
 
 
 
@@ -331,7 +320,7 @@ def Print_C_String():
 
     # print(f"{calculated_checksum:04x}")
 
-    with open('Data/PrmServerBlock_alarm_1325_1.txt', 'w') as f:
+    with open('Data/MCRBlockReq_alarm_1325.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + '\n')
 
