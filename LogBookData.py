@@ -3,7 +3,8 @@ from collections import defaultdict
 import struct
 import socket
 
-
+# def indexNumber(currentElement, list):
+# IP header indexes fixed at 14:33
 def calculate_IP_checksum(header):
     # concatenate adjacent bytes in header to form words, skip checksum bytes
     words = [header[i] + header[i + 1][2:] for i in range(0, len(header), 2) if i not in [10, 11]]
@@ -51,13 +52,15 @@ def Print_C_String():
     # Internet Protocol
     # Version
     # Header Length
+    # Start Counting Length
+    IPLenStart=len(profinet_data.copy());
     profinet_data.append('0x45')
     # Differentiated Services Field
     profinet_data.append('0x00')
     # Total Length
-    profinet_data.extend(['0x00','0xa0'])
+    profinet_data.extend(['0x00','0x00'])
     # Identification
-    profinet_data.extend(['0x52', '0xee'])
+    profinet_data.extend(['0x17', '0x5b'])
     # Flags
     profinet_data.append('0x40')
     # Fragment Offset
@@ -75,11 +78,11 @@ def Print_C_String():
 
     # User Datagram Protocol
     # Source Port
-    profinet_data.extend(['0xe3', '0xdc'])
+    profinet_data.extend(['0xeb', '0xb0'])
     # Destination Port
-    profinet_data.extend(['0xc0', '0x46'])
+    profinet_data.extend(['0xc0', '0x15'])
     # Length
-    profinet_data.extend(['0x00', '0x8c'])
+    profinet_data.extend(['0x00', '0x00'])
     # Checksum
     profinet_data.extend(['0x00', '0x00'])
 
@@ -100,22 +103,23 @@ def Print_C_String():
     profinet_data.extend(['0xde', '0xa0', '0x00', '0x00', '0x6c', '0x97', '0x11', '0xd1', '0x82', '0x71', '0x00', '0x01', '0x00', '0x01', '0x01', '0x74'])
     # Interface: PNIO(Device Interface) UUID: dea00001 -6c97-11d1 - 8271 - 00a02442df7d
     profinet_data.extend(['0xde', '0xa0', '0x00', '0x01', '0x6c', '0x97', '0x11', '0xd1', '0x82', '0x71', '0x00', '0xa0', '0x24', '0x42', '0xdf', '0x7d'])
-    # Activity: 2408f1bc-506f-4bf7-b414-be82fb0fa038
-    profinet_data.extend(['0x24', '0x08', '0xf1', '0xbc', '0x50', '0x6f', '0x4b', '0xf7', '0xb4', '0x14', '0xbe', '0x82', '0xfb', '0x0f', '0xa0', '0x38'])
+    # Activity: fa601515-3229-46f3-b6e0-a6380a583807
+    profinet_data.extend(['0xfa', '0x60', '0x15', '0x15', '0x32', '0x29', '0x46', '0xf3', '0xb6', '0xe0', '0xa6', '0x38', '0x0a', '0x58', '0x38', '0x07'])
     # Server Boot time
-    profinet_data.extend(['0x5d','0x61','0x73','0x2d'])
+    profinet_data.extend(['0x5d','0x61','0x78','0x39'])
     # Interface Ver: 1
     profinet_data.extend(['0x00', '0x00', '0x00', '0x01'])
-    # Sequence Number: 43
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x2b'])
-    # Opnum: 4
-    profinet_data.extend(['0x00', '0x04'])
+    # Sequence Number: 6
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x06'])
+    # Opnum: 2
+    profinet_data.extend(['0x00', '0x02'])
     # Interface Hint: 0xffff
     profinet_data.extend(['0xff', '0xff'])
     # Activity Hint: 0xffff
     profinet_data.extend(['0xff', '0xff'])
-    # Fragment len: 52
-    profinet_data.extend(['0x00', '0x34'])
+    # Fragment len: 124
+    profinet_data.extend(['0x00', '0x00'])
+    dceRpcFragLenIndex = len(profinet_data)-2
     # Fragment num: 0
     profinet_data.extend(['0x00', '0x00'])
     # Auth proto: None (0)
@@ -128,59 +132,107 @@ def Print_C_String():
     fragment_length_start_marker = len(profinet_data.copy())
 
 
-    # Profinet IO (Device), Control
+    # Profinet IO (Device), Read
     # Status: OK
     profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
-    # ArgsLength: 32 (0x00000020)
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x20'])
-    # Array: Max: 66412, Offset: 0, Size: 32
+    # ArgsLength: 104 (0x00000068)
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x68'])
+    # Args Length Index
+    profinetIoArgsLengthIndex = len(profinet_data)-4
+    # Array: Max: 66412, Offset: 0, Size: 104
     # MaximumCount: 66412
     profinet_data.extend(['0x00', '0x01', '0x03', '0x6c'])
     # Offset: 0 (0x00000000)
     profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
-    # ActualCount: 32
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x20'])
+    # ActualCount: 104
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x68'])
+    # Actual Count Index
+    profinetIoActualCountIndex = len(profinet_data)-4
 
-    # IODControlReq Prm End.req: Session:10, Command: ParameterEnd, Properties:0x0
-    # BlockHeader: Type=IODControlReq Prm End.req, Length=28(+4), Version=1.0
-    # BlockType: IODControlRes Prm End.res (0x8110)
-    profinet_data.extend(['0x81', '0x10'])
-    # BlockLength: 28 (0x001c)
-    profinet_data.extend(['0x00', '0x1c'])
+    # Args Length and ActualCount is assumed to be everything else contained in the Profinet IO (Device)
+    profinetIoArgsLengthStart = len(profinet_data)
+    # IODReadResHeader: Seq:4, Api:0x0, Slot:0x0/0x8000, Len:40, AddVal1:0, AddVal2:0
+    # BlockHeader: Type=IODReadResHeader, Length=60(+4), Version=1.0
+    # BlockType: IODReadResHeader (0x8009)
+    profinet_data.extend(['0x80', '0x09'])
+    # BlockLength: 60 (0x003c)
+    profinet_data.extend(['0x00', '0x3c'])
+
+    # IODReadResHeader BlockLength Index
+    IODReadResHeaderBlockLengthIndex = len(profinet_data)-2
+
+    # IODReadResHeader BlockLength Marker Start
+    IODReadResHeaderBlockLengthStart = len(profinet_data)
+
+
+
+
+
+
     # BlockVersionHigh: 1
     profinet_data.append('0x01')
     # BlockVersionLow: 0
     profinet_data.append('0x00')
-    # Reserved: 0x0000
+    # SeqNumber: 4
+    profinet_data.extend(['0x00', '0x04'])
+    # ARUUID: e3f022b4-5acc-41a1-be98-40e300b9c071
+    profinet_data.extend(['0xe3', '0xf0', '0x22', '0xb4', '0x5a', '0xcc', '0x41', '0xa1', '0xbe', '0x98', '0x40', '0xe3', '0x00', '0xb9', '0xc0', '0x71'])
+    # API: 0x00000000
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+    # SlotNumber: 0x0000
     profinet_data.extend(['0x00', '0x00'])
-    # ARUUID: daef5a22-0fce-4145-bd75-998938d106c1
-    profinet_data.extend(['0xda', '0xef', '0x5a', '0x22', '0x0f', '0xce', '0x41', '0x45', '0xbd', '0x75', '0x99', '0x89', '0x38', '0xd1', '0x06', '0xc1'])
-    # SessionKey: 10
-    profinet_data.extend(['0x00', '0x0a'])
-    # Reserved: 0x0000
+    # SubslotNumber: 0x8000
+    profinet_data.extend(['0x80', '0x00'])
+
+    # padding
+    # Question: Usually the padding is at the end of the block but here the
+    # block doesn't continue and padding is in the middle. Why is that?
+    # Answer: It is fixed at 2 in the manual.
     profinet_data.extend(['0x00', '0x00'])
-    # ControlCommand: 0x0008, Done
-    profinet_data.extend(['0x00', '0x08'])
-    # ControlBlockProperties: Reserved (0x0000)
+    # Index: RealIdentificationData for one slot (0xc001)
+    profinet_data.extend(['0xc0', '0x01'])
+    # RecordDataLength: 40 (0x00000028)
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+
+    IODReadResHeaderRecordDataLengthIndex = len(profinet_data)-4
+
+    # AdditionalValue1: 0
     profinet_data.extend(['0x00', '0x00'])
-    fragment_length_end_marker = len(profinet_data.copy())
+    # AdditionalValue2: 0
+    profinet_data.extend(['0x00', '0x00'])
+    # Another Padding here.
+    # This is fixed at 20 as per the manual
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00','0x00', '0x00', '0x00', '0x00', '0x00','0x00', '0x00', '0x00', '0x00', '0x00'])
+    IODReadResHeaderBlockLengthEnd = len(profinet_data)
+
+    IODReadResHeaderBlockLength = IODReadResHeaderBlockLengthEnd - IODReadResHeaderBlockLengthStart
+    profinet_data[IODReadResHeaderBlockLengthIndex] = '0x' + format(IODReadResHeaderBlockLength, '04x')[0:2]
+    profinet_data[IODReadResHeaderBlockLengthIndex+1] = '0x' + format(IODReadResHeaderBlockLength, '04x')[2:]
 
 
-    # We assume for the time being that this block is NOT included in the stub data. This is being treated as a seperate layer.
-    # Later this assumption will be managed if required.
-    # LogBookData with
-    # BlockVersionLow = 0
-    # BlockHeader, ActualLocalTimeStamp, NumberOfLogEntries, (LocalTimeStamp, ARUUID,
-    # PNIOStatus, EntryDetail)*
+
+    # fragment_length_end_marker = len(profinet_data.copy())
+
+
+
+
+    # We assume for the time being that this block is included in the stub data.
+    # RealIdentificationData with BlockVersionLow =1
+    # BlockHeader, NumberOfAPIs, (API, NumberOfSlots, (SlotNumber, ModuleIdentNumber,
+    # NumberOfSubslots, (SubslotNumber, SubmoduleIdentNumber)*)*)*
+
+    # Start of Whole block length
+    BlockLengthStart = len(profinet_data)
 
     # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
     # BlockType: 0x0019
     profinet_data.extend(['0x00', '0x19'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
-    profinet_data.extend(['0x00','0x00'])
-    # Begin counting block length
-    startLenLogBookData=len(profinet_data.copy())
+    profinet_data.extend(['0x00', '0x00'])
+
+    # BlockLengthIndex
+    BlockLengthIndex = len(profinet_data) - 2
 
     # BlockVersionHigh
     profinet_data.append('0x01')
@@ -214,14 +266,18 @@ def Print_C_String():
     # This field shall be coded as data type Unsigned32
     profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
 
-    endLenLogBookData = len(profinet_data.copy())
-    print("The length is: ")
-    print(endLenLogBookData-startLenLogBookData)
+    # Stub data/ Fragment length End marker.
+    fragment_length_end_marker = len(profinet_data.copy())
 
-    # Assigning Length
-    print('0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:])
-    profinet_data[startLenLogBookData-2] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[:2]
-    profinet_data[startLenLogBookData-1] = '0x' + (hex(endLenLogBookData-startLenLogBookData)[2:].zfill(4))[2:]
+    # RealIdentification Block Length End
+    BlockLengthEnd = len(profinet_data)
+
+
+    # Total Length end
+    totalLengthEnd = len(profinet_data.copy())
+    print("Number of elements in profinet_data: ", len(profinet_data))
+
+    # End
 
 
 
@@ -231,25 +287,65 @@ def Print_C_String():
     # because Ethernet II layer is 14 bytes long.
     # The subscript that refers to the IP length is also then: 16 and 17.
 
-    ip_length = len(profinet_data)-14
+    ip_length = totalLengthEnd-IPLenStart
     # IP length is converted to hex, '0x' is ignored, and zfill adds zeros to the left to make the
     # total length to 4 (2 bytes) if it is already not so.
     profinet_data[16] = '0x'+(hex(ip_length)[2:].zfill(4))[:2]
     profinet_data[17] = '0x'+(hex(ip_length)[2:].zfill(4))[2:]
 
+
+    # Assigning the correct Arg length in Profinet IO Device (Read)
+    profinetIoArgsLength = totalLengthEnd-profinetIoArgsLengthStart
+    profinet_data[profinetIoArgsLengthIndex] = '0x' + format(profinetIoArgsLength, '08x')[0:2]
+    profinet_data[profinetIoArgsLengthIndex+1] = '0x' + format(profinetIoArgsLength, '08x')[2:4]
+    profinet_data[profinetIoArgsLengthIndex+2] = '0x' + format(profinetIoArgsLength, '08x')[4:6]
+    profinet_data[profinetIoArgsLengthIndex+3] = '0x' + format(profinetIoArgsLength, '08x')[6:]
+
+    # Assigning the correct Actual Count in Profinet IO Device (Read)
+    profinetIoArgsLength = totalLengthEnd-profinetIoArgsLengthStart
+    profinet_data[profinetIoActualCountIndex] = '0x' + format(profinetIoArgsLength, '08x')[0:2]
+    profinet_data[profinetIoActualCountIndex+1] = '0x' + format(profinetIoArgsLength, '08x')[2:4]
+    profinet_data[profinetIoActualCountIndex+2] = '0x' + format(profinetIoArgsLength, '08x')[4:6]
+    profinet_data[profinetIoActualCountIndex+3] = '0x' + format(profinetIoArgsLength, '08x')[6:]
+
+    # Assigning the correct Actual Count in Profinet IO Device (Read)
+    IODReadResHeaderRecordDataLength = BlockLengthEnd - BlockLengthStart
+    profinet_data[IODReadResHeaderRecordDataLengthIndex] = '0x' + format(IODReadResHeaderRecordDataLength, '08x')[0:2]
+    profinet_data[IODReadResHeaderRecordDataLengthIndex+1] = '0x' + format(IODReadResHeaderRecordDataLength, '08x')[2:4]
+    profinet_data[IODReadResHeaderRecordDataLengthIndex+2] = '0x' + format(IODReadResHeaderRecordDataLength, '08x')[4:6]
+    profinet_data[IODReadResHeaderRecordDataLengthIndex+3] = '0x' + format(IODReadResHeaderRecordDataLength, '08x')[6:]
+
+    # Assigning the correct RealIdentificationData BlockLength: 36 (0x0024)
+    # This is Minus 4 because The block length includes everything in the block except the block type and itself which is 4 bytes
+    IODReadResHeaderRecordDataLength = (BlockLengthEnd - BlockLengthStart) - 4
+    profinet_data[BlockLengthIndex] = '0x' + format(IODReadResHeaderRecordDataLength, '04x')[0:2]
+    profinet_data[BlockLengthIndex + 1] = '0x' + format(IODReadResHeaderRecordDataLength, '04x')[2:4]
+    print(IODReadResHeaderRecordDataLength)
+
+
+
     # Since the function returns a list, relevant checksum bits are re-assigned the correct values.
     profinet_data[24] = calculate_IP_checksum(profinet_data[14:34])[0]
     profinet_data[25] = calculate_IP_checksum(profinet_data[14:34])[1]
 
+
+
     # Assuming the IP header length is always 20 bytes, the UDP length is then:
     # IP length minus 20.
     UDP_length = ip_length -20
+    print(UDP_length)
     profinet_data[38] = '0x' + (hex(UDP_length)[2:].zfill(4))[:2]
     profinet_data[39] = '0x' + (hex(UDP_length)[2:].zfill(4))[2:]
 
     # Since the UDP header is always 8 bytes, the UDP payload minus the header, meaning
     # the DCE/ RPC length would be Length - 8.
+    # This length does not need to be assigned.
     DCE_RPC_Length = UDP_length - 8
+
+    # Assigning correct fragment length value
+    fragmentLength = fragment_length_end_marker-fragment_length_start_marker
+    profinet_data[dceRpcFragLenIndex] = '0x' + (hex(fragmentLength)[2:].zfill(4))[:2]
+    profinet_data[dceRpcFragLenIndex+1] = '0x' + (hex(fragmentLength)[2:].zfill(4))[2:]
 
     # Since the Header lengths of the layers are fixed as follows:
     # Ethernet II = 14 bytes
@@ -274,7 +370,7 @@ def Print_C_String():
 
     DCE_RPC_hex = "".join(x[2:] for x in DCE_RPC)
     DCE_RPC_hex = bytes.fromhex(DCE_RPC_hex)
-    # print(DCE_RPC_hex)
+
 
     # pad the data if necessary
     if len(DCE_RPC_hex) % 2 != 0:
@@ -288,16 +384,23 @@ def Print_C_String():
     profinet_data[40] = '0x' + format(calculated_checksum, '04x')[0:2]
     profinet_data[41] = '0x' + format(calculated_checksum, '04x')[2:]
 
-    # dce_fragment_length = (len(profinet_data)-(14+20+8+80))
-    dce_fragment_length = fragment_length_end_marker - fragment_length_start_marker
-    profinet_data[116] = '0x' + format(dce_fragment_length, '04x')[0:2]
-    profinet_data[117] = '0x' + format(dce_fragment_length, '04x')[2:]
 
-    # print(f"{calculated_checksum:04x}")
 
-    with open('Data/LogBookData_alarm_1325_1.txt', 'w') as f:
+
+    # # dce_fragment_length = (len(profinet_data)-(14+20+8+80))
+    # dce_fragment_length = fragment_length_end_marker - fragment_length_start_marker
+    # profinet_data[116] = '0x' + format(dce_fragment_length, '04x')[0:2]
+    # profinet_data[117] = '0x' + format(dce_fragment_length, '04x')[2:]
+
+    print(f"{calculated_checksum:04x}")
+
+    with open('Data/LogBookData2.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
-            f.write(', '.join(profinet_data[i:i + 8]) + '\n')
+            f.write(', '.join(profinet_data[i:i + 8]) + ',\n')
+    # Now, remove the last comma and newline
+    with open('Data/LogBookData2.txt', 'rb+') as f:  # note the mode 'rb+'
+        f.seek(-3, 2)  # go to 3 bytes from the end, endline,
+        f.truncate()  # truncate the file at this point, effectively removing the last 2 bytes
 
 
 
@@ -307,13 +410,13 @@ def Print_C_String():
 
 
 # Parse the pcap file and get the dataframes
-Print_C_String()
 
 
 #
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+    Print_C_String()
     print('PyCharm')
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
