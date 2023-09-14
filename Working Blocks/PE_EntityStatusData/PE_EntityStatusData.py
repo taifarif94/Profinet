@@ -217,8 +217,9 @@ def Print_C_String():
 
 
     # We assume for the time being that this block is included in the stub data.
-    # FiberOpticDiagnosisInfo
-    # BlockHeader, Padding, Padding, FiberOpticPowerBudgetReal, [Padding*] a
+    # PE_EntityStatusData
+    # BlockHeader, PE_StatusDataInfo
+
 
     # Start of Whole block length
     BlockLengthStart = len(profinet_data)
@@ -239,19 +240,51 @@ def Print_C_String():
     # BlockVersionLow
     profinet_data.append('0x00')
 
-    # FrameID: Padding x2
+    # NumberOfAPIs, (API, NumberOfModules, (SlotNumber, NumberOfSubmodules,
+    # (SubslotNumber, PE_OperationalMode, [Padding]* a )*)*)*
+
+    # NumberOfAPIs
+    # Coded as data type Unsigned16.
+    # profinet_data.append('0x0001')
+    profinet_data.extend(['0x00', '0x01'])
+
+    # API
+    # Unsigned32
+    # 0x00000001
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x01'])
+
+
+    # NumberOfModules
+    # Unsigned16
+    profinet_data.extend(['0x00', '0x01'])
+
+    # SlotNumber
+    # Coded as data type Unsigned16
+    # profinet_data.append('0x0000')
     profinet_data.extend(['0x00', '0x00'])
 
-    # FiberOpticPowerBudgetReal
-    # Random value taken as no info given in documents
-    profinet_data.extend(['0x00', '0x00', '0x01', '0x01'])
+    # NumberOfSubmodules
+    # Unsigned16
+    profinet_data.extend(['0x00', '0x01'])
+
+    # SubSlotNumber
+    # Coded as data type Unsigned16.
+    # SubslotNumber: 0x0001
+    profinet_data.extend(['0x00', '0x01'])
+
+    # PE_OperationalMode
+    # Unsigned8
+    # 0x00
+    # PE_PowerOff
+    profinet_data.append('0x00')
 
     # Block Length End
     BlockLengthEnd = len(profinet_data)
 
     # Ensure Unsigned32 alignment
     block_length_current = BlockLengthEnd - BlockLengthStart
-    padding_needed = (4 - (block_length_current % 4)) % 4
+    print(block_length_current%4)
+    padding_needed = (block_length_current % 4)
     print("Padding needed: ")
     print(padding_needed)
     # Insert padding octets right after the BlockHeader
@@ -383,11 +416,11 @@ def Print_C_String():
 
     print(f"{calculated_checksum:04x}")
 
-    with open('FiberOpticDiagnosisInfo.txt', 'w') as f:
+    with open('PE_EntityStatusData.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + ',\n')
     # Now, remove the last comma and newline
-    with open('FiberOpticDiagnosisInfo.txt', 'rb+') as f:  # note the mode 'rb+'
+    with open('PE_EntityStatusData.txt', 'rb+') as f:  # note the mode 'rb+'
         f.seek(-2, 2)  # go to 3 bytes from the end, endline,
         f.truncate()  # truncate the file at this point, effectively removing the last 2 bytes
 
