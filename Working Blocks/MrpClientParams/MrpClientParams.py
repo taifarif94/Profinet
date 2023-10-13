@@ -217,15 +217,15 @@ def Print_C_String():
 
 
     # We assume for the time being that this block is included in the stub data.
-    # MrpRingStateData
-    # BlockHeader, MRP_RingState
+    # MrpClientParams
+    # BlockHeader, MRP_LNKdownT, MRP_LNKupT, MRP_LNKNRmax
 
     # Start of Whole block length
     BlockLengthStart = len(profinet_data)
 
     # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType: 0x0219
-    profinet_data.extend(['0x02', '0x19'])
+    # BlockType: 0x0217
+    profinet_data.extend(['0x02', '0x17'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
     profinet_data.extend(['0x00', '0x00'])
@@ -239,10 +239,20 @@ def Print_C_String():
     # BlockVersionLow
     profinet_data.append('0x00')
 
-    # MRP_RingState
+    # MRP_LNKdownT
     # Unsigned16
-    # 0x0000
-    profinet_data.extend(['0x00', '0x00'])
+    # 0000 0000 0001 0100
+    profinet_data.extend(['0x00', '0x14'])
+
+    # MRP_LNKupT
+    # Unsigned16
+    # 0000 0000 0001 0100
+    profinet_data.extend(['0x00', '0x14'])
+
+    # MRP_LNKNRmax
+    # Unsigned16
+    # 0000 0000 0000 0100
+    profinet_data.extend(['0x00', '0x04'])
 
     # Block Length End
     BlockLengthEnd = len(profinet_data)
@@ -383,11 +393,11 @@ def Print_C_String():
 
     print(f"{calculated_checksum:04x}")
 
-    with open('MrpRingStateData.txt', 'w') as f:
+    with open('MrpClientParams.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + ',\n')
     # Now, remove the last comma and newline
-    with open('MrpRingStateData.txt', 'rb+') as f:  # note the mode 'rb+'
+    with open('MrpClientParams.txt', 'rb+') as f:  # note the mode 'rb+'
         f.seek(-2, 2)  # go to 3 bytes from the end, endline,
         f.truncate()  # truncate the file at this point, effectively removing the last 2 bytes
 
