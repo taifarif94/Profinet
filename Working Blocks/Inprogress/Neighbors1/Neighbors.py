@@ -217,16 +217,17 @@ def Print_C_String():
 
 
     # We assume for the time being that this block is included in the stub data.
-    # MrpManagerParams
-    # BlockHeader, MRP_Prio, MRP_TOPchgT, MRP_TOPNRmax, MRP_TSTshortT,
-    # MRP_TSTdefaultT, MRP_TSTNRmax, [Padding*] a
+    # Neighbors
+    # BlockHeader, Padding, Padding, NumberOfPeers, [Padding*] a , ( LineDelay c , MAUType c ,
+    # MAUTypeExtension c , PeerMACAddress b , LengthPeerPortName, PeerPortName,
+    # LengthPeerStationName, PeerStationName, [Padding*] a )*
 
     # Start of Whole block length
     BlockLengthStart = len(profinet_data)
 
     # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType: 0x0216
-    profinet_data.extend(['0x02', '0x16'])
+    # BlockType: 0x0018
+    profinet_data.extend(['0x00', '0x18'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
     profinet_data.extend(['0x00', '0x00'])
@@ -240,29 +241,17 @@ def Print_C_String():
     # BlockVersionLow
     profinet_data.append('0x00')
 
-    # ParameterServerObjectUUID
-    # Object UUID: dea00000-6c97-11d1-8271-000100010174
-    profinet_data.extend(['0xde', '0xa0', '0x00', '0x00', '0x6c', '0x97', '0x11', '0xd1', '0x82', '0x71', '0x00', '0x01', '0x00', '0x01', '0x01', '0x74'])
+    # Padding
+    profinet_data.append('0x00')
 
-    # ParameterServerProperties
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+    # Padding
+    profinet_data.append('0x00')
 
-    # CMInitiatorActivityTimeoutFactor
-    # Unsigned16
-    profinet_data.extend(['0x00', '0x64'])
-
-    # StationNameLength
-    # Unsigned16.
-    profinet_data.extend(['0x00', '0x02'])
-
-    # ParameterServerStationName
-    profinet_data.extend(['0x00', '0xab'])
-
-
+    # NumberOfPeers
+    profinet_data.append('0x01')
 
     # Block Length End
     BlockLengthEnd = len(profinet_data)
-
 
     # Ensure Unsigned32 alignment
     block_length_current = BlockLengthEnd - BlockLengthStart
@@ -273,6 +262,24 @@ def Print_C_String():
     # Insert padding octets right after the BlockHeader
     for _ in range(padding_needed):
         profinet_data.append('0x00')
+
+    # LineDelay
+    profinet_data.extend(['0x00', '0x00','0x00', '0x01'])
+
+    # MAUType
+    # 0x0000
+    profinet_data.extend(['0x00', '0x00'])
+
+    # MAUTypeExtension
+    # 0x0000
+    profinet_data.extend(['0x00', '0x00'])
+
+    # PeerMACAddress
+    # Assuming 6 Octets
+    # 00-1B-63-84-45-E6.
+    profinet_data.extend(['0x00','0x1b', '0x63','0x84', '0x45', '0xe6'])
+
+    
 
     # Stub data/ Fragment length End marker.
     fragment_length_end_marker = len(profinet_data.copy())
@@ -400,11 +407,11 @@ def Print_C_String():
 
     print(f"{calculated_checksum:04x}")
 
-    with open('PrmServerBlock.txt', 'w') as f:
+    with open('Neighbors.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + ',\n')
     # Now, remove the last comma and newline
-    with open('PrmServerBlock.txt', 'rb+') as f:  # note the mode 'rb+'
+    with open('Neighbors.txt', 'rb+') as f:  # note the mode 'rb+'
         f.seek(-2, 2)  # go to 3 bytes from the end, endline,
         f.truncate()  # truncate the file at this point, effectively removing the last 2 bytes
 

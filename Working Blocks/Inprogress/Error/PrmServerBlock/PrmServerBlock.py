@@ -132,31 +132,31 @@ def Print_C_String():
     fragment_length_start_marker = len(profinet_data.copy())
 
 
-    # Profinet IO (Device), Read
-    # Status: OK
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+    # Profinet IO (Device), Control
+    # ArgsMaximum: 66412
+    profinet_data.extend(['0x00', '0x01', '0x03', '0x6c'])
     # ArgsLength: 104 (0x00000068)
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x68'])
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x24'])
     # Args Length Index
-    profinetIoArgsLengthIndex = len(profinet_data)-4
-    # Array: Max: 66412, Offset: 0, Size: 104
+    # profinetIoArgsLengthIndex = len(profinet_data)-4
+    # Array: Max: 66412, Offset: 0, Size: 32
     # MaximumCount: 66412
     profinet_data.extend(['0x00', '0x01', '0x03', '0x6c'])
     # Offset: 0 (0x00000000)
     profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
-    # ActualCount: 104
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x68'])
+    # ActualCount: ??
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
     # Actual Count Index
     profinetIoActualCountIndex = len(profinet_data)-4
 
-    # Args Length and ActualCount is assumed to be everything else contained in the Profinet IO (Device)
+    # Args Length and ActualCount is assumed to be everything else contained in the Profinet IO (Control)
     profinetIoArgsLengthStart = len(profinet_data)
-    # IODReadResHeader: Seq:4, Api:0x0, Slot:0x0/0x8000, Len:40, AddVal1:0, AddVal2:0
-    # BlockHeader: Type=IODReadResHeader, Length=60(+4), Version=1.0
-    # BlockType: IODReadResHeader (0x8009)
-    profinet_data.extend(['0x80', '0x09'])
-    # BlockLength: 60 (0x003c)
-    profinet_data.extend(['0x00', '0x3c'])
+    # IODControlReq: Seq:4, Api:0x0, Slot:0x0/0x8000, Len:40, AddVal1:0, AddVal2:0
+    # BlockHeader: Type=IODControlReq Prm End.req, Length=28(+4), Version=1.0
+    # BlockType: IODControlReq Prm End.req (0x0110)
+    profinet_data.extend(['0x01', '0x10'])
+    # BlockLength: 28 (0x001c)
+    profinet_data.extend(['0x00', '0x00'])
 
     # IODReadResHeader BlockLength Index
     IODReadResHeaderBlockLengthIndex = len(profinet_data)-2
@@ -164,69 +164,39 @@ def Print_C_String():
     # IODReadResHeader BlockLength Marker Start
     IODReadResHeaderBlockLengthStart = len(profinet_data)
 
-
-
-
-
-
     # BlockVersionHigh: 1
     profinet_data.append('0x01')
     # BlockVersionLow: 0
     profinet_data.append('0x00')
-    # SeqNumber: 4
-    profinet_data.extend(['0x00', '0x04'])
-    # ARUUID: e3f022b4-5acc-41a1-be98-40e300b9c071
-    profinet_data.extend(['0xe3', '0xf0', '0x22', '0xb4', '0x5a', '0xcc', '0x41', '0xa1', '0xbe', '0x98', '0x40', '0xe3', '0x00', '0xb9', '0xc0', '0x71'])
-    # API: 0x00000000
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
-    # SlotNumber: 0x0000
+    # Reserved: 0x0000
     profinet_data.extend(['0x00', '0x00'])
-    # SubslotNumber: 0x8000
+    # ARUUID: e3f022b4-5acc-41a1-be98-40e300b9c071
+    profinet_data.extend(['0xde', '0xa0', '0x00', '0x00', '0x6c', '0x97', '0x11', '0xd1', '0x82', '0x71', '0x00', '0x01', '0x00', '0x01', '0x01', '0x74'])
+    # SessionKey: 1
+    profinet_data.extend(['0x00', '0x01'])
+    # Reserved: 0x0000
+    profinet_data.extend(['0x00', '0x00'])
+    # ControlBlockProperties: Reserved (0x0000)
     profinet_data.extend(['0x80', '0x00'])
 
-    # padding
-    # Question: Usually the padding is at the end of the block but here the
-    # block doesn't continue and padding is in the middle. Why is that?
-    # Answer: It is fixed at 2 in the manual.
-    profinet_data.extend(['0x00', '0x00'])
-    # Index: RealIdentificationData for one slot (0xc001)
-    profinet_data.extend(['0xc0', '0x01'])
-    # RecordDataLength: 40 (0x00000028)
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
 
     IODReadResHeaderRecordDataLengthIndex = len(profinet_data)-4
-
-    # AdditionalValue1: 0
-    profinet_data.extend(['0x00', '0x00'])
-    # AdditionalValue2: 0
-    profinet_data.extend(['0x00', '0x00'])
-    # Another Padding here.
-    # This is fixed at 20 as per the manual
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00','0x00', '0x00', '0x00', '0x00', '0x00','0x00', '0x00', '0x00', '0x00', '0x00'])
     IODReadResHeaderBlockLengthEnd = len(profinet_data)
 
     IODReadResHeaderBlockLength = IODReadResHeaderBlockLengthEnd - IODReadResHeaderBlockLengthStart
     profinet_data[IODReadResHeaderBlockLengthIndex] = '0x' + format(IODReadResHeaderBlockLength, '04x')[0:2]
     profinet_data[IODReadResHeaderBlockLengthIndex+1] = '0x' + format(IODReadResHeaderBlockLength, '04x')[2:]
 
-
-
-    # fragment_length_end_marker = len(profinet_data.copy())
-
-
-
-
     # We assume for the time being that this block is included in the stub data.
-    # MrpManagerParams
-    # BlockHeader, MRP_Prio, MRP_TOPchgT, MRP_TOPNRmax, MRP_TSTshortT,
-    # MRP_TSTdefaultT, MRP_TSTNRmax, [Padding*] a
-
+    # PrmServerBlock
+    # BlockHeader, ParameterServerObjectUUID, ParameterServerProperties,
+    # CMInitiatorActivityTimeoutFactor, StationNameLength, ParameterServerStationName a
     # Start of Whole block length
     BlockLengthStart = len(profinet_data)
 
     # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType: 0x0216
-    profinet_data.extend(['0x02', '0x16'])
+    # BlockType: 0x0105
+    profinet_data.extend(['0x01', '0x05'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
     profinet_data.extend(['0x00', '0x00'])
@@ -241,38 +211,36 @@ def Print_C_String():
     profinet_data.append('0x00')
 
     # ParameterServerObjectUUID
-    # Object UUID: dea00000-6c97-11d1-8271-000100010174
-    profinet_data.extend(['0xde', '0xa0', '0x00', '0x00', '0x6c', '0x97', '0x11', '0xd1', '0x82', '0x71', '0x00', '0x01', '0x00', '0x01', '0x01', '0x74'])
+    # Used the filter pn_io.parameter_server_objectuuid to find a sample ParameterServerObjectUUID in the Different access ways.pcap
+    # The format given there is: 00000000-0000-0000-0000-000000000000 (16 octets)
+    # profinet_data.extend(['0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00','0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00'])
 
     # ParameterServerProperties
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+    # Unsigned32. Reserved for future use.
+    # profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
 
     # CMInitiatorActivityTimeoutFactor
+    # CMInitiatorActivityTimeoutFactor with ARProperties.DeviceAccess == 0
     # Unsigned16
-    profinet_data.extend(['0x00', '0x64'])
+    # 1 – 1 000 Decimal
+    # profinet_data.extend(['0x00', '0x01'])
 
     # StationNameLength
     # Unsigned16.
-    profinet_data.extend(['0x00', '0x02'])
+    # profinet_data.extend(['0x00', '0x00'])
 
     # ParameterServerStationName
-    profinet_data.extend(['0x00', '0xab'])
-
+    # Left Empty
 
 
     # Block Length End
     BlockLengthEnd = len(profinet_data)
-
-
-    # Ensure Unsigned32 alignment
-    block_length_current = BlockLengthEnd - BlockLengthStart
-    print(block_length_current)
-    padding_needed = (block_length_current % 4)
-    print("Padding needed: ")
-    print(padding_needed)
-    # Insert padding octets right after the BlockHeader
-    for _ in range(padding_needed):
-        profinet_data.append('0x00')
+    # block_length_current = BlockLengthEnd - BlockLengthStart
+    # padding_needed = (4 - (block_length_current % 4)) % 4
+    # print("Padding needed: ")
+    # print(padding_needed)
+    # for _ in range(padding_needed):
+    #     profinet_data.append('0x00')  # 6 is the length of BlockHeader
 
     # Stub data/ Fragment length End marker.
     fragment_length_end_marker = len(profinet_data.copy())
@@ -284,6 +252,11 @@ def Print_C_String():
     print("Number of elements in profinet_data: ", len(profinet_data))
 
     # End
+
+    block_length_current = BlockLengthEnd - BlockLengthStart
+    padding_needed = (4 - (block_length_current % 4)) % 4
+    print("Padding needed: ")
+    print(padding_needed)
 
 
 
@@ -300,12 +273,12 @@ def Print_C_String():
     profinet_data[17] = '0x'+(hex(ip_length)[2:].zfill(4))[2:]
 
 
-    # Assigning the correct Arg length in Profinet IO Device (Read)
-    profinetIoArgsLength = totalLengthEnd-profinetIoArgsLengthStart
-    profinet_data[profinetIoArgsLengthIndex] = '0x' + format(profinetIoArgsLength, '08x')[0:2]
-    profinet_data[profinetIoArgsLengthIndex+1] = '0x' + format(profinetIoArgsLength, '08x')[2:4]
-    profinet_data[profinetIoArgsLengthIndex+2] = '0x' + format(profinetIoArgsLength, '08x')[4:6]
-    profinet_data[profinetIoArgsLengthIndex+3] = '0x' + format(profinetIoArgsLength, '08x')[6:]
+    # # Assigning the correct Arg length in Profinet IO Device (Read)
+    # profinetIoArgsLength = totalLengthEnd-profinetIoArgsLengthStart
+    # profinet_data[profinetIoArgsLengthIndex] = '0x' + format(profinetIoArgsLength, '08x')[0:2]
+    # profinet_data[profinetIoArgsLengthIndex+1] = '0x' + format(profinetIoArgsLength, '08x')[2:4]
+    # profinet_data[profinetIoArgsLengthIndex+2] = '0x' + format(profinetIoArgsLength, '08x')[4:6]
+    # profinet_data[profinetIoArgsLengthIndex+3] = '0x' + format(profinetIoArgsLength, '08x')[6:]
 
     # Assigning the correct Actual Count in Profinet IO Device (Read)
     profinetIoArgsLength = totalLengthEnd-profinetIoArgsLengthStart

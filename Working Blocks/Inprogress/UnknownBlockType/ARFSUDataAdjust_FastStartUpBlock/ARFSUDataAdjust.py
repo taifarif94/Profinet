@@ -217,16 +217,15 @@ def Print_C_String():
 
 
     # We assume for the time being that this block is included in the stub data.
-    # MrpManagerParams
-    # BlockHeader, MRP_Prio, MRP_TOPchgT, MRP_TOPNRmax, MRP_TSTshortT,
-    # MRP_TSTdefaultT, MRP_TSTNRmax, [Padding*] a
+    # ARFSUDataAdjust
+    # BlockHeader, Padding, Padding, { [FSParameterBlock], [FastStartUpBlock] }
 
     # Start of Whole block length
     BlockLengthStart = len(profinet_data)
 
     # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType: 0x0216
-    profinet_data.extend(['0x02', '0x16'])
+    # BlockType: 0x0609
+    profinet_data.extend(['0x06', '0x09'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
     profinet_data.extend(['0x00', '0x00'])
@@ -240,32 +239,88 @@ def Print_C_String():
     # BlockVersionLow
     profinet_data.append('0x00')
 
-    # ParameterServerObjectUUID
-    # Object UUID: dea00000-6c97-11d1-8271-000100010174
-    profinet_data.extend(['0xde', '0xa0', '0x00', '0x00', '0x6c', '0x97', '0x11', '0xd1', '0x82', '0x71', '0x00', '0x01', '0x00', '0x01', '0x01', '0x74'])
+    # Padding
+    profinet_data.append('0x00')
 
-    # ParameterServerProperties
+    # Padding
+    profinet_data.append('0x00')
+
+    # FSParameterBlock
+    # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
+
+    # Start of inner block length
+    BlockLengthInner1Start = len(profinet_data)
+
+    # BlockType: 0x0601
+    profinet_data.extend(['0x06', '0x01'])
+    # BlockLength
+    # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
+    profinet_data.extend(['0x00', '0x00'])
+
+    # BlockLengthIndex
+    BlockLengthInner1Index = len(profinet_data) - 2
+
+    # BlockVersionHigh
+    profinet_data.append('0x01')
+
+    # BlockVersionLow
+    profinet_data.append('0x00')
+
+    # Padding, Padding
+    profinet_data.append('0x00')
+    profinet_data.append('0x00')
+
+    # FSParameterMode
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x01'])
+
+    # FSParameterUUID
+    # 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01
     profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x01'])
 
-    # CMInitiatorActivityTimeoutFactor
-    # Unsigned16
-    profinet_data.extend(['0x00', '0x64'])
+    # Block Length End
+    BlockLengthInner1End = len(profinet_data)
 
-    # StationNameLength
-    # Unsigned16.
-    profinet_data.extend(['0x00', '0x02'])
+    # FastStartUpBlock
+    # BlockHeader, Padding, Padding, Data*, [Padding*] a
 
-    # ParameterServerStationName
-    profinet_data.extend(['0x00', '0xab'])
+    # Start of inner block length
+    BlockLengthInner2Start = len(profinet_data)
 
+    # BlockType: 0x0602
+    profinet_data.extend(['0x06', '0x02'])
+    # BlockLength
+    # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
+    profinet_data.extend(['0x00', '0x00'])
+
+    # BlockLengthIndex
+    BlockLengthInner2Index = len(profinet_data) - 2
+
+    # BlockVersionHigh
+    profinet_data.append('0x01')
+
+    # BlockVersionLow
+    profinet_data.append('0x00')
+
+    # Padding, Padding
+    profinet_data.append('0x00')
+    profinet_data.append('0x00')
+
+    # Data
+    profinet_data.extend(['0x00','0x01'])
 
 
     # Block Length End
-    BlockLengthEnd = len(profinet_data)
+    BlockLengthInner2End = len(profinet_data)
+
+    # # Block Length End
+    # BlockLengthEnd = len(profinet_data)
 
 
     # Ensure Unsigned32 alignment
-    block_length_current = BlockLengthEnd - BlockLengthStart
+    block_length_current = BlockLengthInner2End - BlockLengthInner2Start
     print(block_length_current)
     padding_needed = (block_length_current % 4)
     print("Padding needed: ")
@@ -273,6 +328,8 @@ def Print_C_String():
     # Insert padding octets right after the BlockHeader
     for _ in range(padding_needed):
         profinet_data.append('0x00')
+    # Block Length End
+    BlockLengthInner2End = len(profinet_data)
 
     # Stub data/ Fragment length End marker.
     fragment_length_end_marker = len(profinet_data.copy())
@@ -320,6 +377,20 @@ def Print_C_String():
     profinet_data[IODReadResHeaderRecordDataLengthIndex+1] = '0x' + format(IODReadResHeaderRecordDataLength, '08x')[2:4]
     profinet_data[IODReadResHeaderRecordDataLengthIndex+2] = '0x' + format(IODReadResHeaderRecordDataLength, '08x')[4:6]
     profinet_data[IODReadResHeaderRecordDataLengthIndex+3] = '0x' + format(IODReadResHeaderRecordDataLength, '08x')[6:]
+
+    # Assigning the correct RealIdentificationData BlockLength: 36 (0x0024)
+    # This is Minus 4 because The block length includes everything in the block except the block type and itself which is 4 bytes
+    InnerBlock1Length = (BlockLengthInner1End - BlockLengthInner1Start) - 4
+    profinet_data[BlockLengthInner1Index] = '0x' + format(InnerBlock1Length, '04x')[0:2]
+    profinet_data[BlockLengthInner1Index + 1] = '0x' + format(InnerBlock1Length, '04x')[2:4]
+    print(InnerBlock1Length)
+
+    # Assigning the correct RealIdentificationData BlockLength: 36 (0x0024)
+    # This is Minus 4 because The block length includes everything in the block except the block type and itself which is 4 bytes
+    InnerBlock2Length = (BlockLengthInner2End - BlockLengthInner2Start) - 4
+    profinet_data[BlockLengthInner2Index] = '0x' + format(InnerBlock2Length, '04x')[0:2]
+    profinet_data[BlockLengthInner2Index + 1] = '0x' + format(InnerBlock2Length, '04x')[2:4]
+    print(InnerBlock2Length)
 
     # Assigning the correct RealIdentificationData BlockLength: 36 (0x0024)
     # This is Minus 4 because The block length includes everything in the block except the block type and itself which is 4 bytes
@@ -400,11 +471,11 @@ def Print_C_String():
 
     print(f"{calculated_checksum:04x}")
 
-    with open('PrmServerBlock.txt', 'w') as f:
+    with open('ARFSUDataAdjust.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + ',\n')
     # Now, remove the last comma and newline
-    with open('PrmServerBlock.txt', 'rb+') as f:  # note the mode 'rb+'
+    with open('ARFSUDataAdjust.txt', 'rb+') as f:  # note the mode 'rb+'
         f.seek(-2, 2)  # go to 3 bytes from the end, endline,
         f.truncate()  # truncate the file at this point, effectively removing the last 2 bytes
 

@@ -217,16 +217,16 @@ def Print_C_String():
 
 
     # We assume for the time being that this block is included in the stub data.
-    # MrpManagerParams
-    # BlockHeader, MRP_Prio, MRP_TOPchgT, MRP_TOPNRmax, MRP_TSTshortT,
-    # MRP_TSTdefaultT, MRP_TSTNRmax, [Padding*] a
+    # PDRsiInstances
+    # BlockHeader, NumberOfEntries, (VendorID, DeviceID, InstanceID, RsiInterface, Padding)*,
+    # SystemIdentification
 
     # Start of Whole block length
     BlockLengthStart = len(profinet_data)
 
     # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType: 0x0216
-    profinet_data.extend(['0x02', '0x16'])
+    # BlockType: 0x0241
+    profinet_data.extend(['0x02', '0x41'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
     profinet_data.extend(['0x00', '0x00'])
@@ -240,45 +240,45 @@ def Print_C_String():
     # BlockVersionLow
     profinet_data.append('0x00')
 
-    # MRP_Prio
-    # Unsigned16
+    # NumberOfEntries
+    profinet_data.extend(['0x00', '0x01'])
+
+    # VendorID
+    # 0x0001
+    profinet_data.extend(['0x00', '0x01'])
+
+    # DeviceID
+    # 0x0001
+    profinet_data.extend(['0x00', '0x01'])
+
+    # InstanceID
     # 0x0000
     profinet_data.extend(['0x00', '0x00'])
 
-    # MRP_TOPchgT
-    # Unsigned16
-    profinet_data.extend(['0x00', '0x01'])
+    # RsiInterface
+    profinet_data.append('0x00')
 
-    # MRP_TOPNRmax
-    # Unsigned16
-    profinet_data.extend(['0x00', '0x03'])
+    # Padding
+    profinet_data.append('0x00')
 
-    # MRP_TSTshortT
-    # Unsigned16
-    # 1010
-    profinet_data.extend(['0x00', '0x0a'])
+    # SystemIdentification
+    profinet_data.append('0x01')
 
-    # MRP_TSTdefaultT
-    # Unsigned16
-    profinet_data.extend(['0x00', '0x14'])
 
-    # MRP_TSTNRmax
-    # Unsigned16
-    profinet_data.extend(['0x00', '0x03'])
 
     # Block Length End
     BlockLengthEnd = len(profinet_data)
 
 
-    # Ensure Unsigned32 alignment
-    block_length_current = BlockLengthEnd - BlockLengthStart
-    print(block_length_current)
-    padding_needed = (block_length_current % 4)
-    print("Padding needed: ")
-    print(padding_needed)
-    # Insert padding octets right after the BlockHeader
-    for _ in range(padding_needed):
-        profinet_data.append('0x00')
+    # # Ensure Unsigned32 alignment
+    # block_length_current = BlockLengthEnd - BlockLengthStart
+    # print(block_length_current)
+    # padding_needed = (block_length_current % 4)
+    # print("Padding needed: ")
+    # print(padding_needed)
+    # # Insert padding octets right after the BlockHeader
+    # for _ in range(padding_needed):
+    #     profinet_data.append('0x00')
 
     # Stub data/ Fragment length End marker.
     fragment_length_end_marker = len(profinet_data.copy())
@@ -406,11 +406,11 @@ def Print_C_String():
 
     print(f"{calculated_checksum:04x}")
 
-    with open('MrpManagerParams.txt', 'w') as f:
+    with open('PDRsiInstances.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + ',\n')
     # Now, remove the last comma and newline
-    with open('MrpManagerParams.txt', 'rb+') as f:  # note the mode 'rb+'
+    with open('PDRsiInstances.txt', 'rb+') as f:  # note the mode 'rb+'
         f.seek(-2, 2)  # go to 3 bytes from the end, endline,
         f.truncate()  # truncate the file at this point, effectively removing the last 2 bytes
 
