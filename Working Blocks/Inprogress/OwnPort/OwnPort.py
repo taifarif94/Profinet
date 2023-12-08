@@ -164,11 +164,6 @@ def Print_C_String():
     # IODReadResHeader BlockLength Marker Start
     IODReadResHeaderBlockLengthStart = len(profinet_data)
 
-
-
-
-
-
     # BlockVersionHigh: 1
     profinet_data.append('0x01')
     # BlockVersionLow: 0
@@ -217,22 +212,20 @@ def Print_C_String():
 
 
     # We assume for the time being that this block is included in the stub data.
-    # PDRsiInstances
-    # BlockHeader, NumberOfEntries, (VendorID, DeviceID, InstanceID, RsiInterface, Padding)*,
-    # SystemIdentification
-
-    # Start of Whole block length
-    BlockLengthStart = len(profinet_data)
-
+    # OwnPort
     # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType: 0x0241
-    profinet_data.extend(['0x02', '0x41'])
+
+    # Start of inner block length
+    BlockLengthInner1Start = len(profinet_data)
+
+    # BlockType: 0x 02 60
+    profinet_data.extend(['0x02', '0x60'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
     profinet_data.extend(['0x00', '0x00'])
 
     # BlockLengthIndex
-    BlockLengthIndex = len(profinet_data) - 2
+    BlockLengthInner1Index = len(profinet_data) - 2
 
     # BlockVersionHigh
     profinet_data.append('0x01')
@@ -240,45 +233,69 @@ def Print_C_String():
     # BlockVersionLow
     profinet_data.append('0x00')
 
-    # NumberOfEntries
-    profinet_data.extend(['0x00', '0x01'])
+    # Padding, Padding
+    profinet_data.append('0x00')
+    profinet_data.append('0x00')
 
-    # VendorID
-    # 0x0001
-    profinet_data.extend(['0x00', '0x01'])
+    profinet_data.append('0x08')
 
-    # DeviceID
-    # 0x0001
-    profinet_data.extend(['0x00', '0x01'])
+    # Port name: PortName
+    profinet_data.extend(['0x50', '0x6F', '0x72', '0x74', '0x4E', '0x61', '0x6D', '0x65'])
 
-    # InstanceID
-    # 0x0000
+    # ownportfirstmarkerend
+    ownportfirstmarkerend = len(profinet_data)
+
+
+    # Ensure Unsigned32 alignment
+    block_length_current = ownportfirstmarkerend - BlockLengthInner1Start
+    print(block_length_current)
+    padding_needed = (4- block_length_current % 4) % 4
+    print("Padding needed OwnPort: ")
+    print(padding_needed)
+    # Insert padding octets right after the BlockHeader
+    for _ in range(padding_needed):
+        profinet_data.append('0x00')
+
+    # LineDelay = 0x 00 00 00 00
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+
+    # Media Type
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x02'])
+
+    # Multicast Boundary 32 bits
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+
+    # MAU Type: 0x0005
+    profinet_data.extend(['0x00', '0x05'])
+
+    # MAU Type Extension
     profinet_data.extend(['0x00', '0x00'])
 
-    # RsiInterface
-    profinet_data.append('0x00')
+    # Link State
+    profinet_data.extend(['0x03', '0x01'])
 
-    # Padding
-    profinet_data.append('0x00')
-
-    # SystemIdentification
-    profinet_data.append('0x01')
+    # RTClass3_Port Status
+    profinet_data.extend(['0x00', '0x01'])
 
 
 
     # Block Length End
-    BlockLengthEnd = len(profinet_data)
+    BlockLengthInner1End = len(profinet_data)
 
 
-    # # Ensure Unsigned32 alignment
-    # block_length_current = BlockLengthEnd - BlockLengthStart
-    # print(block_length_current)
-    # padding_needed = (block_length_current % 4)
-    # print("Padding needed: ")
-    # print(padding_needed)
-    # # Insert padding octets right after the BlockHeader
-    # for _ in range(padding_needed):
-    #     profinet_data.append('0x00')
+    # # Block Length End
+    # BlockLengthEnd = len(profinet_data)
+
+
+    # Ensure Unsigned32 alignment
+    block_length_current = BlockLengthInner1End - BlockLengthInner1Start
+    print(block_length_current)
+    padding_needed = (4 - block_length_current % 4) % 4
+    print("Padding needed End Port: ")
+    print(padding_needed)
+    # Insert padding octets right after the BlockHeader
+    for _ in range(padding_needed):
+        profinet_data.append('0x00')
 
     # Stub data/ Fragment length End marker.
     fragment_length_end_marker = len(profinet_data.copy())
@@ -321,7 +338,7 @@ def Print_C_String():
     profinet_data[profinetIoActualCountIndex+3] = '0x' + format(profinetIoArgsLength, '08x')[6:]
 
     # Assigning the correct Actual Count in Profinet IO Device (Read)
-    IODReadResHeaderRecordDataLength = BlockLengthEnd - BlockLengthStart
+    IODReadResHeaderRecordDataLength = BlockLengthEnd - BlockLengthInner1Start
     profinet_data[IODReadResHeaderRecordDataLengthIndex] = '0x' + format(IODReadResHeaderRecordDataLength, '08x')[0:2]
     profinet_data[IODReadResHeaderRecordDataLengthIndex+1] = '0x' + format(IODReadResHeaderRecordDataLength, '08x')[2:4]
     profinet_data[IODReadResHeaderRecordDataLengthIndex+2] = '0x' + format(IODReadResHeaderRecordDataLength, '08x')[4:6]
@@ -329,9 +346,16 @@ def Print_C_String():
 
     # Assigning the correct RealIdentificationData BlockLength: 36 (0x0024)
     # This is Minus 4 because The block length includes everything in the block except the block type and itself which is 4 bytes
-    IODReadResHeaderRecordDataLength = (BlockLengthEnd - BlockLengthStart) - 4
-    profinet_data[BlockLengthIndex] = '0x' + format(IODReadResHeaderRecordDataLength, '04x')[0:2]
-    profinet_data[BlockLengthIndex + 1] = '0x' + format(IODReadResHeaderRecordDataLength, '04x')[2:4]
+    InnerBlock1Length = (BlockLengthInner1End - BlockLengthInner1Start) - 4
+    profinet_data[BlockLengthInner1Index] = '0x' + format(InnerBlock1Length, '04x')[0:2]
+    profinet_data[BlockLengthInner1Index + 1] = '0x' + format(InnerBlock1Length, '04x')[2:4]
+    print(InnerBlock1Length)
+
+    # Assigning the correct RealIdentificationData BlockLength: 36 (0x0024)
+    # This is Minus 4 because The block length includes everything in the block except the block type and itself which is 4 bytes
+    IODReadResHeaderRecordDataLength = (BlockLengthEnd - BlockLengthInner1Start) - 4
+    profinet_data[BlockLengthInner1Index] = '0x' + format(IODReadResHeaderRecordDataLength, '04x')[0:2]
+    profinet_data[BlockLengthInner1Index + 1] = '0x' + format(IODReadResHeaderRecordDataLength, '04x')[2:4]
     print(IODReadResHeaderRecordDataLength)
 
 
@@ -406,14 +430,14 @@ def Print_C_String():
 
     print(f"{calculated_checksum:04x}")
 
-    with open('PDRsiInstances.txt', 'w') as f:
+    with open('OwnPort.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + ',\n')
     # Now, remove the last comma and newline
-    with open('PDRsiInstances.txt', 'rb+') as f:  # note the mode 'rb+'
+    with open('OwnPort.txt', 'rb+') as f:  # note the mode 'rb+'
         f.seek(-2, 2)  # go to 3 bytes from the end, endline,
         f.truncate()  # truncate the file at this point, effectively removing the last 2 bytes
-
+        print("Task Successful")
 
 
 
