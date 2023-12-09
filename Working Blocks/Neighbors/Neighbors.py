@@ -240,13 +240,47 @@ def Print_C_String():
     # BlockVersionLow
     profinet_data.append('0x00')
 
-    # ARVendorBlockReq
-    # Unsigned16
+    # Padding
     profinet_data.extend(['0x00', '0x00'])
 
-    # API
-    # Unsigned32
+    # NumberOfPeers: Unsigned8
+    profinet_data.append('0x01')
+
+    FirstPadding = len(profinet_data)
+
+    # Ensure Unsigned32 alignment
+    block_length_current = FirstPadding - BlockLengthStart
+    print(block_length_current)
+    padding_needed = (4 - block_length_current % 4) % 4
+    print("Padding needed: ")
+    print(padding_needed)
+    # Insert padding octets right after the BlockHeader
+    for _ in range(padding_needed):
+        profinet_data.append('0x00')
+
+    # LineDelay: Unsigned32
     profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
+
+    # MAUType: 10BaseT
+    profinet_data.extend(['0x00', '0x05'])
+
+    # MAUTypeExtension: Unsigned16
+    profinet_data.extend(['0x00', '0x00'])
+
+    # PeerMACAddress: sample 0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E
+    profinet_data.extend(['0x00', '0x1A', '0x2B', '0x3C', '0x4D', '0x5E'])
+
+    # LengthPeerPortName: Unsigned8
+    profinet_data.append('0x08')
+
+    # PeerPortName:50 6F 72 74 4E 61 6D 65
+    profinet_data.extend(['0x50', '0x6F', '0x72', '0x74', '0x4E', '0x61', '0x6D', '0x65'])
+
+    # LengthPeerStationName:
+    profinet_data.append('0x0B')
+
+    # PeerStationName: StationName 53 74 61 74 69 6F 6E 4E 61 6D 65
+    profinet_data.extend(['0x53', '0x74', '0x61', '0x74', '0x69', '0x6F', '0x6E', '0x4E', '0x61', '0x6D', '0x65'])
 
     # Block Length End
     BlockLengthEnd = len(profinet_data)
@@ -255,7 +289,7 @@ def Print_C_String():
     # Ensure Unsigned32 alignment
     block_length_current = BlockLengthEnd - BlockLengthStart
     print(block_length_current)
-    padding_needed = (block_length_current % 4)
+    padding_needed = (4 - block_length_current % 4) % 4
     print("Padding needed: ")
     print(padding_needed)
     # Insert padding octets right after the BlockHeader
