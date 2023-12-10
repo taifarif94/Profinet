@@ -213,16 +213,40 @@ def Print_C_String():
 
     # fragment_length_end_marker = len(profinet_data.copy())
 
+    # PDInterfaceFSUDataAdjust
+    # Start of Whole block length
+    BlockLengthStartMain = len(profinet_data)
 
+    # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
+    # BlockType: 0x0608
+    profinet_data.extend(['0x06', '0x08'])
+    # BlockLength
+    # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
+    profinet_data.extend(['0x00', '0x00'])
 
+    # BlockLengthIndex
+    BlockLengthIndexMain = len(profinet_data) - 2
+
+    # BlockVersionHigh
+    profinet_data.append('0x01')
+
+    # BlockVersionLow
+    profinet_data.append('0x00')
+
+    # Padding, Padding
+    profinet_data.append('0x00')
+    profinet_data.append('0x00')
 
     # We assume for the time being that this block is included in the stub data.
-    # MrpInstanceDataAdjustBlock
+    # FSHelloDelay
+    # BlockHeader, Padding, Padding, FSHelloMode, FSHelloInterval, FSHelloRetry,
+
+    # Start of Whole block length
     BlockLengthStart = len(profinet_data)
 
     # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType: 0x0231
-    profinet_data.extend(['0x02', '0x31'])
+    # BlockType: 0x0600
+    profinet_data.extend(['0x06', '0x00'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
     profinet_data.extend(['0x00', '0x00'])
@@ -236,60 +260,33 @@ def Print_C_String():
     # BlockVersionLow
     profinet_data.append('0x00')
 
-    # Padding
-    profinet_data.extend(['0x00', '0x00'])
-
-    # MRP_Instance
+    # Padding, Padding
+    profinet_data.append('0x00')
     profinet_data.append('0x00')
 
-    # MRP_DomainUUID
-    # FF FF FF FF- FF FF- FF FF- FF FF- FF FF FF FF FF FF
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00', '0x01'])
+    # FSHelloMode
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
 
-    FirstPadding = len(profinet_data)
+    # FSHelloInterval
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x1E'])
 
-    # Ensure Unsigned32 alignment
-    block_length_current = FirstPadding - BlockLengthStart
-    print(block_length_current)
-    padding_needed = (4 - block_length_current % 4) % 4
-    print("Padding needed: ")
-    print(padding_needed)
-    # Insert padding octets right after the BlockHeader
-    for _ in range(padding_needed):
-        profinet_data.append('0x00')
+    # FSHelloRetry
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x03'])
 
-    # MRP_LengthDomainName:
-    profinet_data.append('0x0C')
-
-    # MRP Domain Name: 4D 52 50 44 6F 6D 61 69 6E 4E 61 6D 65
-    profinet_data.extend(['0x4D', '0x52', '0x50', '0x44', '0x6F', '0x6D', '0x61', '0x69', '0x6E', '0x4E', '0x6D', '0x65'])
-
-    SecondPadding = len(profinet_data)
-
-    # Ensure Unsigned32 alignment
-    block_length_current = SecondPadding - BlockLengthStart
-    print(block_length_current)
-    padding_needed = (4 - block_length_current % 4) % 4
-    print("Padding needed: ")
-    print(padding_needed)
-    # Insert padding octets right after the BlockHeader
-    for _ in range(padding_needed):
-        profinet_data.append('0x00')
+    # FSHelloDelay
+    profinet_data.extend(['0x00', '0x00', '0x00', '0x32'])
 
     # Block Length End
     BlockLengthEnd = len(profinet_data)
 
-
     # Ensure Unsigned32 alignment
     block_length_current = BlockLengthEnd - BlockLengthStart
-    print(block_length_current)
-    padding_needed = (4 - block_length_current % 4) % 4
+    padding_needed = (4 - (block_length_current % 4)) % 4
     print("Padding needed: ")
     print(padding_needed)
     # Insert padding octets right after the BlockHeader
-    for _ in range(padding_needed):
-        profinet_data.append('0x00')
-
+    # for _ in range(padding_needed):
+        # profinet_data.insert(BlockLengthStart + 6, '0x00')  # 6 is the length of BlockHeader
     # Stub data/ Fragment length End marker.
     fragment_length_end_marker = len(profinet_data.copy())
     # Block Length End
@@ -338,6 +335,12 @@ def Print_C_String():
     profinet_data[IODReadResHeaderRecordDataLengthIndex+3] = '0x' + format(IODReadResHeaderRecordDataLength, '08x')[6:]
 
     # Assigning the correct RealIdentificationData BlockLength: 36 (0x0024)
+    # This is Minus 4 because The block length includes everything in the block except the block type and itself which is 4 bytes
+    IODReadResHeaderRecordDataLength = (BlockLengthEnd - BlockLengthStartMain) - 4
+    profinet_data[BlockLengthIndexMain] = '0x' + format(IODReadResHeaderRecordDataLength, '04x')[0:2]
+    profinet_data[BlockLengthIndexMain + 1] = '0x' + format(IODReadResHeaderRecordDataLength, '04x')[2:4]
+    print(IODReadResHeaderRecordDataLength)
+
     # This is Minus 4 because The block length includes everything in the block except the block type and itself which is 4 bytes
     IODReadResHeaderRecordDataLength = (BlockLengthEnd - BlockLengthStart) - 4
     profinet_data[BlockLengthIndex] = '0x' + format(IODReadResHeaderRecordDataLength, '04x')[0:2]
@@ -416,11 +419,11 @@ def Print_C_String():
 
     print(f"{calculated_checksum:04x}")
 
-    with open('MrpInstanceDataAdjustBlock.txt', 'w') as f:
+    with open('FSHelloBlock.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + ',\n')
     # Now, remove the last comma and newline
-    with open('MrpInstanceDataAdjustBlock.txt', 'rb+') as f:  # note the mode 'rb+'
+    with open('FSHelloBlock.txt', 'rb+') as f:  # note the mode 'rb+'
         f.seek(-2, 2)  # go to 3 bytes from the end, endline,
         f.truncate()  # truncate the file at this point, effectively removing the last 2 bytes
 
