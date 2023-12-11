@@ -217,16 +217,15 @@ def Print_C_String():
 
 
     # We assume for the time being that this block is included in the stub data.
-    # MrpManagerParams
-    # BlockHeader, MRP_Prio, MRP_TOPchgT, MRP_TOPNRmax, MRP_TSTshortT,
-    # MRP_TSTdefaultT, MRP_TSTNRmax, [Padding*] a
+    # FSHelloDelay
+    # BlockHeader, Padding, Padding, FSHelloMode, FSHelloInterval, FSHelloRetry,
 
     # Start of Whole block length
     BlockLengthStart = len(profinet_data)
 
     # BlockHeader BlockType, BlockLength, BlockVersionHigh, BlockVersionLow
-    # BlockType: 0x0105
-    profinet_data.extend(['0x01', '0x05'])
+    # BlockType: 0x0602
+    profinet_data.extend(['0x06', '0x02'])
     # BlockLength
     # 0x0003 – 0xFFFF Number of octets without counting the fields BlockType and BlockLength
     profinet_data.extend(['0x00', '0x00'])
@@ -240,39 +239,34 @@ def Print_C_String():
     # BlockVersionLow
     profinet_data.append('0x00')
 
-    # ParameterServerObjectUUID
-    # Object UUID: dea00000-6c97-11d1-8271-000100010174
-    profinet_data.extend(['0xde', '0xa0', '0x00', '0x00', '0x6c', '0x97', '0x11', '0xd1', '0x82', '0x71', '0x00', '0x01', '0x00', '0x01', '0x01', '0x74'])
+    # Padding, Padding
+    profinet_data.append('0x00')
+    profinet_data.append('0x00')
 
-    # ParameterServerProperties
-    profinet_data.extend(['0x00', '0x00', '0x00', '0x00'])
-
-    # CMInitiatorActivityTimeoutFactor
-    # Unsigned16
-    profinet_data.extend(['0x00', '0x64'])
-
-    # StationNameLength
-    # Unsigned16.
-    profinet_data.extend(['0x00', '0x02'])
-
-    # ParameterServerStationName
-    profinet_data.extend(['0x00', '0xab'])
-
-
+    # Data
+    profinet_data.append('0x0a')
 
     # Block Length End
     BlockLengthEnd = len(profinet_data)
 
-
     # Ensure Unsigned32 alignment
     block_length_current = BlockLengthEnd - BlockLengthStart
     print(block_length_current)
-    padding_needed = (block_length_current % 4)
+    padding_needed = (4 - block_length_current % 4) % 4
     print("Padding needed: ")
     print(padding_needed)
     # Insert padding octets right after the BlockHeader
     for _ in range(padding_needed):
         profinet_data.append('0x00')
+
+    # # Ensure Unsigned32 alignment
+    # block_length_current = BlockLengthEnd - BlockLengthStart
+    # padding_needed = (4 - (block_length_current % 4)) % 4
+    # print("Padding needed: ")
+    # print(padding_needed)
+    # Insert padding octets right after the BlockHeader
+    # for _ in range(padding_needed):
+        # profinet_data.insert(BlockLengthStart + 6, '0x00')  # 6 is the length of BlockHeader
 
     # Stub data/ Fragment length End marker.
     fragment_length_end_marker = len(profinet_data.copy())
@@ -400,11 +394,11 @@ def Print_C_String():
 
     print(f"{calculated_checksum:04x}")
 
-    with open('PrmServerBlock.txt', 'w') as f:
+    with open('FastStartUpBlock.txt', 'w') as f:
         for i in range(0, len(profinet_data), 8):
             f.write(', '.join(profinet_data[i:i + 8]) + ',\n')
     # Now, remove the last comma and newline
-    with open('PrmServerBlock.txt', 'rb+') as f:  # note the mode 'rb+'
+    with open('FastStartUpBlock.txt', 'rb+') as f:  # note the mode 'rb+'
         f.seek(-2, 2)  # go to 3 bytes from the end, endline,
         f.truncate()  # truncate the file at this point, effectively removing the last 2 bytes
 
